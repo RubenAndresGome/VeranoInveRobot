@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Autonomo S3</title>
+    <!-- INJECT_CSS -->
+    <style>
+        .grid-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .control-pad { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+        .btn-dir { background: var(--bl-900); color: var(--bl-300); padding: 16px; border: 1px solid var(--bl-600); border-radius: 8px; text-align: center; cursor: pointer; -webkit-user-select: none; user-select: none; transition: 0.1s; font-weight: bold; text-transform: uppercase; }
+        .btn-dir:active { transform: scale(0.95); background: var(--bl-600); color: white; }
+        .btn-stop { background: rgba(239, 68, 68, 0.2); color: var(--rd-400); border: 1px solid var(--rd-500); }
+        .btn-stop:active { background: var(--rd-500); color: white; }
+        
+        .huge-number { font-size: 28px; font-weight: 700; color: var(--pu-300); background: #020617; padding: 12px; border: 1px solid var(--sl-700); border-radius: 6px; text-align: center; }
+        .progress-bar-container { background: #020617; border: 1px solid var(--sl-700); border-radius: 12px; height: 24px; padding: 3px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--cy-700), var(--cy-400)); border-radius: 8px; transition: 0.2s width; }
+        
+        @media (max-width: 1000px) { .grid-3col { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<header class="app-header">
+    <div class="header-logo-container">
+        <div class="logo-dot"></div>
+        <span class="header-title">ROBOT-AUTONOMO-S3</span>
+    </div>
+    <div class="header-info">
+        <span class="data-label">IP:</span><span class="data-value" id="hdr-ip">192.168.4.1</span>
+        <span class="data-label">FSM:</span><span id="fsm-badge" class="fsm-badge fsm-badge-idle">IDLE</span>
+    </div>
+</header>
+
+<main class="main-container">
+    <div class="grid-3col">
+        
+        <!-- COLUMNA 1: CONTROL MANUAL -->
+        <div class="panel-tech panel-col">
+            <div class="panel-title">Control Manual</div>
+            
+            <div class="control-pad">
+                <div></div>
+                <div class="btn-dir" id="btn-fwd">Avanzar</div>
+                <div></div>
+                <div class="btn-dir btn-dir-turn" id="btn-left">Girar</div>
+                <div class="btn-dir btn-stop" id="btn-stop">Stop</div>
+                <div class="btn-dir btn-dir-turn" id="btn-right">Girar</div>
+                <div></div>
+                <div class="btn-dir btn-dir-rev" id="btn-rev">Retroceder</div>
+                <div></div>
+            </div>
+
+            <!-- PWM Control Widget Style -->
+            <div class="pwm-widget">
+                <div class="pwm-header">
+                    <span class="pwm-title">Velocidad PWM</span>
+                    <span id="lbl-pwm-val" class="pwm-value">150</span>
+                </div>
+                <div class="pwm-slider-container">
+                    <span class="pwm-icon">⚡</span>
+                    <input type="range" min="0" max="255" value="150" class="slider-tech" id="sl-pwm-gral" title="Velocidad PWM" oninput="window.ui.setPWM('i',this.value); window.ui.setPWM('d',this.value); document.getElementById('lbl-pwm-val').textContent=this.value;">
+                </div>
+            </div>
+
+            <div class="estop-container">
+                <button class="btn-estop btn-estop-full" onclick="window.ui.cmd('estop')">EMERGENCY STOP</button>
+            </div>
+        </div>
+
+        <!-- COLUMNA 2: TELEMETRIA -->
+        <div class="panel-tech panel-col">
+            <div class="panel-title">Telemetría en Vivo</div>
+            
+            <div class="grid-2col-gap16">
+                <div>
+                    <div class="data-label data-label-mb4">DISTANCIA (CM)</div>
+                    <div class="huge-number" id="tel-dist">0.0</div>
+                </div>
+                <div>
+                    <div class="data-label data-label-mb4">ANGULO (°)</div>
+                    <div class="huge-number text-pu-300" id="tel-ang">0.0</div>
+                </div>
+            </div>
+
+            <div class="traj-container">
+                <div class="flex-between">
+                    <span class="data-label">TRAYECTORIA (X,Y CM)</span>
+                    <span class="data-value data-value-sm"><span id="tel-posx">0.0</span>, <span id="tel-posy">0.0</span></span>
+                </div>
+                <!-- OPTIMIZACION DE CANVAS (Doble capa) -->
+                <div class="canvas-container">
+                    <canvas id="canvas-bg" class="canvas-layer"></canvas>
+                    <canvas id="canvas-fg" class="canvas-layer"></canvas>
+                </div>
+            </div>
+
+            <div>
+                <span class="data-label">MOTORES (PWM)</span>
+                <div class="pwm-bar-row">
+                    <span class="pwm-bar-label">Izquierdo</span>
+                    <div class="progress-bar-container"><div class="progress-bar-fill w-0" id="bar-pwm-i"></div></div>
+                    <span id="lbl-pwm-i" class="pwm-bar-val">0</span>
+                </div>
+                <div class="pwm-bar-row">
+                    <span class="pwm-bar-label">Derecho</span>
+                    <div class="progress-bar-container"><div class="progress-bar-fill w-0" id="bar-pwm-d"></div></div>
+                    <span id="lbl-pwm-d" class="pwm-bar-val">0</span>
+                </div>
+                <div class="enc-row">
+                    <span>Pulsos L: <span id="enc-i">0</span></span>
+                    <span>Pulsos R: <span id="enc-d">0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA 3: LABERINTO -->
+        <div class="panel-tech panel-col">
+            <div class="panel-title">Laberinto X/Y</div>
+            
+            <div class="grid-2col-gap16">
+                <div>
+                    <div class="data-label data-label-mb4">DESTINO X (CM)</div>
+                    <input type="number" id="inp-dest-x" value="0" title="Destino X" class="input-tech">
+                </div>
+                <div>
+                    <div class="data-label data-label-mb4">DESTINO Y (CM)</div>
+                    <input type="number" id="inp-dest-y" value="0" title="Destino Y" class="input-tech">
+                </div>
+            </div>
+
+            <div class="grid-2col-gap10">
+                <button class="btn-cmd btn-cmd-add" onclick="window.app.agregarPuntoXY()">Agregar</button>
+                <button class="btn-cmd btn-cmd-go" onclick="window.app.enviarRutaRobot()">Ir al Destino</button>
+            </div>
+
+            <div class="waypoints-container">
+                <span class="data-label data-label-mb8">WAYPOINTS PROGRAMADOS</span>
+                <div id="waypoints-list" class="waypoints-list">
+                    <div class="waypoints-empty">Ingrese X,Y destino arriba</div>
+                </div>
+                <button class="btn-cmd btn-cmd-clear" onclick="window.app.limpiarRuta()">Limpiar</button>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- INJECT_JS -->
+</body>
+</html>
