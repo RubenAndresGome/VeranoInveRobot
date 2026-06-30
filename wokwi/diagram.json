@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "author": "VeranoInve — Carro Robot Autónomo",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-s3-devkitc-1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-mpu6050",
+      "id": "imu1",
+      "top": -140,
+      "left": -280,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_enc_izq",
+      "top": 120,
+      "left": -280,
+      "attrs": { "color": "green", "label": "ENC IZQ" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_enc_der",
+      "top": 200,
+      "left": -280,
+      "attrs": { "color": "blue", "label": "ENC DER" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_in1",
+      "top": -120,
+      "left": 250,
+      "attrs": { "color": "yellow", "label": "IN1" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_in2",
+      "top": -80,
+      "left": 250,
+      "attrs": { "color": "yellow", "label": "IN2" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_ena",
+      "top": -40,
+      "left": 250,
+      "attrs": { "color": "orange", "label": "ENA (PWM)" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_in3",
+      "top": 20,
+      "left": 250,
+      "attrs": { "color": "cyan", "label": "IN3" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_in4",
+      "top": 60,
+      "left": 250,
+      "attrs": { "color": "cyan", "label": "IN4" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_enb",
+      "top": 100,
+      "left": 250,
+      "attrs": { "color": "orange", "label": "ENB (PWM)" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_idle",
+      "top": 200,
+      "left": 250,
+      "attrs": { "color": "green", "label": "IDLE" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_moving",
+      "top": 240,
+      "left": 250,
+      "attrs": { "color": "blue", "label": "MOVING" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_error",
+      "top": 280,
+      "left": 250,
+      "attrs": { "color": "red", "label": "ERROR" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_in1",
+      "top": -115,
+      "left": 200,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_in2",
+      "top": -75,
+      "left": 200,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_ena",
+      "top": -35,
+      "left": 200,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_in3",
+      "top": 25,
+      "left": 200,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_in4",
+      "top": 65,
+      "left": 200,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_enb",
+      "top": 105,
+      "left": 200,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_idle",
+      "top": 205,
+      "left": 200,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_moving",
+      "top": 245,
+      "left": 200,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_error",
+      "top": 285,
+      "left": 200,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-gnd",
+      "id": "gnd_leds_motor",
+      "top": 150,
+      "left": 350,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-gnd",
+      "id": "gnd_leds_status",
+      "top": 330,
+      "left": 350,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-gnd",
+      "id": "gnd_imu",
+      "top": -60,
+      "left": -340,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-gnd",
+      "id": "gnd_enc",
+      "top": 300,
+      "left": -340,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-vcc",
+      "id": "vcc_imu",
+      "top": -180,
+      "left": -340,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-vcc",
+      "id": "vcc_enc",
+      "top": 80,
+      "left": -340,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_estop",
+      "top": 350,
+      "left": -280,
+      "attrs": { "color": "red", "label": "E-STOP" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_estop",
+      "top": 400,
+      "left": -280,
+      "rotate": 90,
+      "attrs": { "value": "10000" }
+    },
+    {
+      "type": "wokwi-gnd",
+      "id": "gnd_estop",
+      "top": 440,
+      "left": -300,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    ["esp:TX", "$serialMonitor:RX", "", []],
+    ["esp:RX", "$serialMonitor:TX", "", []],
+
+    ["esp:6", "imu1:SDA", "green", ["h-40", "v-180"]],
+    ["esp:7", "imu1:SCL", "blue", ["h-50", "v-170"]],
+    ["vcc_imu:VCC", "imu1:VCC", "red", ["v0"]],
+    ["imu1:GND", "gnd_imu:GND", "black", ["v0"]],
+
+    ["esp:4", "btn_enc_izq:2.r", "green", ["h-60", "v80"]],
+    ["btn_enc_izq:1.r", "vcc_enc:VCC", "red", ["v-40"]],
+    ["btn_enc_izq:2.l", "gnd_enc:GND", "black", ["v180"]],
+    ["esp:5", "btn_enc_der:2.r", "blue", ["h-70", "v120"]],
+    ["btn_enc_der:1.r", "vcc_enc:VCC", "red", ["v-120"]],
+    ["btn_enc_der:2.l", "gnd_enc:GND", "black", ["v100"]],
+
+    ["esp:16", "r_in1:1", "yellow", ["h60", "v-120"]],
+    ["r_in1:2", "led_in1:A", "yellow", ["v0"]],
+    ["led_in1:C", "gnd_leds_motor:GND", "black", ["h60", "v270"]],
+
+    ["esp:17", "r_in2:1", "yellow", ["h70", "v-80"]],
+    ["r_in2:2", "led_in2:A", "yellow", ["v0"]],
+    ["led_in2:C", "gnd_leds_motor:GND", "black", ["h60", "v230"]],
+
+    ["esp:15", "r_ena:1", "orange", ["h80", "v-40"]],
+    ["r_ena:2", "led_ena:A", "orange", ["v0"]],
+    ["led_ena:C", "gnd_leds_motor:GND", "black", ["h60", "v190"]],
+
+    ["esp:8", "r_in3:1", "cyan", ["h60", "v20"]],
+    ["r_in3:2", "led_in3:A", "cyan", ["v0"]],
+    ["led_in3:C", "gnd_leds_motor:GND", "black", ["h60", "v130"]],
+
+    ["esp:9", "r_in4:1", "cyan", ["h70", "v60"]],
+    ["r_in4:2", "led_in4:A", "cyan", ["v0"]],
+    ["led_in4:C", "gnd_leds_motor:GND", "black", ["h60", "v90"]],
+
+    ["esp:18", "r_enb:1", "orange", ["h80", "v100"]],
+    ["r_enb:2", "led_enb:A", "orange", ["v0"]],
+    ["led_enb:C", "gnd_leds_motor:GND", "black", ["h60", "v50"]],
+
+    ["esp:38", "r_idle:1", "green", ["h90", "v200"]],
+    ["r_idle:2", "led_idle:A", "green", ["v0"]],
+    ["led_idle:C", "gnd_leds_status:GND", "black", ["h60", "v130"]],
+
+    ["esp:39", "r_moving:1", "blue", ["h100", "v240"]],
+    ["r_moving:2", "led_moving:A", "blue", ["v0"]],
+    ["led_moving:C", "gnd_leds_status:GND", "black", ["h60", "v90"]],
+
+    ["esp:40", "r_error:1", "red", ["h110", "v280"]],
+    ["r_error:2", "led_error:A", "red", ["v0"]],
+    ["led_error:C", "gnd_leds_status:GND", "black", ["h60", "v50"]],
+
+    ["esp:41", "btn_estop:2.r", "red", ["h-80", "v300"]],
+    ["btn_estop:1.r", "esp:3V3", "red", ["v-270"]],
+    ["btn_estop:2.l", "r_estop:1", "black", ["v0"]],
+    ["r_estop:2", "gnd_estop:GND", "black", ["v0"]]
+  ],
+  "dependencies": {}
+}
