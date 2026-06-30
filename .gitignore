@@ -29,7 +29,8 @@ ProyectoDeAutomatizacion/
 # ── Tools locales ──
 .agents/
 .cache/
-.opencode/
+.opencode/*
+!.opencode/skills/
 .codebase-memory/
 
 # ── Archivos comprimidos ──
