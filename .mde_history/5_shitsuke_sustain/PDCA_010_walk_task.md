@@ -1,0 +1,12 @@
+- `[x]` 1. Migración a WebSockets (Backend C++)
+  - `[x]` Modificar `src/web_server.cpp` -> `web_server_send_telemetry` para enviar JSON por WebSocket.
+- `[x]` 2. Optimización de Canvas (Frontend)
+  - `[x]` Separar `canvas-bg` y `canvas-fg` en `frontend/index.html`.
+  - `[x]` Actualizar `frontend/js/trajectory.js` para renderizado en dos capas.
+- `[x]` 3. Refactorización UI (Cards y Eventos Táctiles)
+  - `[x]` Modificar `frontend/index.html` con el nuevo layout de tarjetas (Avanzar, Retroceder, Stop, etc.).
+  - `[x]` Añadir soporte táctil (ontouchstart/ontouchend) en botones manuales en `app.js`.
+  - `[x]` Ajustar `frontend/css/styles.css`.
+- `[x]` 4. Pipeline y Verificación
+  - `[x]` Ejecutar `node scripts/build_gui.js`.
+  - `[ ]` Compilar y desplegar firmware en ESP32.

@@ -1,0 +1,230 @@
+#include <Wire.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include "BluetoothSerial.h"
+
+//================ MPU6050 ================
+Adafruit_MPU6050 mpu;
+
+//================ BLUETOOTH ================
+BluetoothSerial SerialBT;
+
+//================ L298N ================
+const int ENA = 13;
+const int IN1 = 12;
+const int IN2 = 14;
+
+const int IN3 = 27;
+const int IN4 = 26;
+const int ENB = 25;
+
+//================ PWM ================
+const int frecuencia = 5000;
+const int resolucion = 8;
+
+//================ ENCODERS ================
+const int encoderIzq = 18;
+const int encoderDer = 19;
+
+volatile long pulsosIzq = 0;
+volatile long pulsosDer = 0;
+
+//================ ODOMETRIA ================
+const float Cm = 1.25;
+
+//================ GIROSCOPIO ================
+float angX = 0;
+float angY = 0;
+float angZ = 0;
+
+unsigned long tiempoAnterior = 0;
+
+//================ ISR ================
+void IRAM_ATTR contarPulsoIzq() {
+  pulsosIzq++;
+}
+
+void IRAM_ATTR contarPulsoDer() {
+  pulsosDer++;
+}
+
+//================ MOTORES ================
+void detener() {
+
+  ledcWrite(ENA, 0);
+  ledcWrite(ENB, 0);
+
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+}
+
+void avanzarDistancia(float distanciaObjetivo, int velocidad) {
+
+  pulsosIzq = 0;
+  pulsosDer = 0;
+
+  long pulsosObjetivo = distanciaObjetivo / Cm;
+
+  Serial.print("Pulsos Objetivo: ");
+  Serial.println(pulsosObjetivo);
+
+  // Adelante
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  ledcWrite(ENA, velocidad);
+  ledcWrite(ENB, velocidad);
+
+  while (pulsosIzq < pulsosObjetivo || pulsosDer < pulsosObjetivo) {
+
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+
+    float gx = g.gyro.x;
+    float gy = g.gyro.y;
+    float gz = g.gyro.z;
+
+    unsigned long tiempoActual = millis();
+    float dt = (tiempoActual - tiempoAnterior) / 1000.0;
+    tiempoAnterior = tiempoActual;
+
+    angX += gx * dt;
+    angY += gy * dt;
+    angZ += gz * dt;
+
+    // ===== Monitor Serie =====
+    Serial.print("Gyro X: ");
+    Serial.print(gx);
+    Serial.print("  Y: ");
+    Serial.print(gy);
+    Serial.print("  Z: ");
+    Serial.println(gz);
+
+    Serial.print("AngX: ");
+    Serial.print(angX);
+
+    Serial.print(" | AngY: ");
+    Serial.print(angY);
+
+    Serial.print(" | AngZ: ");
+    Serial.println(angZ);
+
+    Serial.print("Encoder Izq: ");
+    Serial.print(pulsosIzq);
+
+    Serial.print(" | Encoder Der: ");
+    Serial.println(pulsosDer);
+
+    Serial.println("-------------------");
+
+    // ===== Bluetooth =====
+    SerialBT.print("GX:");
+    SerialBT.print(gx);
+
+    SerialBT.print(",GY:");
+    SerialBT.print(gy);
+
+    SerialBT.print(",GZ:");
+    SerialBT.print(gz);
+
+    SerialBT.print(",AX:");
+    SerialBT.print(angX);
+
+    SerialBT.print(",AY:");
+    SerialBT.print(angY);
+
+    SerialBT.print(",AZ:");
+    SerialBT.print(angZ);
+
+    SerialBT.print(",ENCI:");
+    SerialBT.print(pulsosIzq);
+
+    SerialBT.print(",ENCD:");
+    SerialBT.println(pulsosDer);
+
+    delay(100);
+  }
+
+  detener();
+}
+
+//================ SETUP ================
+void setup() {
+
+  Serial.begin(115200);
+
+  // MPU6050
+  Serial.println("Iniciando MPU6050...");
+
+  if (!mpu.begin()) {
+    Serial.println("Error: MPU6050 no encontrado");
+
+    while (1) {
+      delay(10);
+    }
+  }
+
+  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+  Serial.println("MPU6050 listo");
+
+  // Bluetooth
+  SerialBT.begin("RobotESP32");
+  Serial.println("Bluetooth iniciado");
+
+  tiempoAnterior = millis();
+
+  // Motores
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  ledcAttach(ENA, frecuencia, resolucion);
+  ledcAttach(ENB, frecuencia, resolucion);
+
+  // Encoders
+  pinMode(encoderIzq, INPUT_PULLUP);
+  pinMode(encoderDer, INPUT_PULLUP);
+
+  attachInterrupt(
+    digitalPinToInterrupt(encoderIzq),
+    contarPulsoIzq,
+    RISING
+  );
+
+  attachInterrupt(
+    digitalPinToInterrupt(encoderDer),
+    contarPulsoDer,
+    RISING
+  );
+
+  Serial.println("Sistema listo");
+  delay(1000);
+}
+
+//================ LOOP ================
+void loop() {
+
+  Serial.println("Iniciando trayectoria");
+
+  avanzarDistancia(100.0, 255);
+
+  Serial.println("Trayectoria completada");
+
+  for (int i = 5; i > 0; i--) {
+
+    Serial.print("Esperando ");
+    Serial.print(i);
+    Serial.println(" s");
+
+    delay(1000);
+  }
+}

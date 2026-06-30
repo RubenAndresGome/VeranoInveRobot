@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Ensamble — Carro Robot Autónomo ESP32-S3</title>
+    <link rel="stylesheet" href="diagrama_ensamble.css">
+    <style>
+        /* Embedded font fallback — zero external dependencies */
+        @font-face { font-family:'Inter'; font-style:normal; font-weight:400 700; src:local('Segoe UI'),local('Arial'),local('sans-serif'); }
+        @font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:400 700; src:local('Consolas'),local('Courier New'),local('monospace'); }
+    </style>
+</head>
+<body>
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="toolbar-logo">EDA Viewer</div>
+        <button data-mode="wires" class="toolbar-btn active">Cables Físicos</button>
+        <button data-mode="buses" class="toolbar-btn">Buses + Labels</button>
+        <button data-mode="labels" class="toolbar-btn">Esquema Puro</button>
+        <div class="toolbar-sep"></div>
+        <div class="filter-group">
+            <button class="filter-btn active" data-filter="power" onclick="toggleFilter('power')">PWR</button>
+            <button class="filter-btn active" data-filter="gnd" onclick="toggleFilter('gnd')">GND</button>
+            <button class="filter-btn active" data-filter="signal" onclick="toggleFilter('signal')">Señal</button>
+        </div>
+        <div class="toolbar-sep"></div>
+        <button id="btnTogglePanel" class="toolbar-btn" onclick="togglePanel()">Tabla</button>
+        <div class="toolbar-info mono">ESP32-S3 Robot Car · Rev 3.2 · ITESS 2026</div>
+    </div>
+
+    <!-- MAIN CANVAS -->
+    <div class="canvas-container" id="canvasContainer">
+        <div class="schematic-canvas" id="schematicCanvas">
+            
+            <!-- ZONE BACKGROUNDS -->
+            <div class="zone" style="left:70px; top:30px; width:500px; height:1110px;">
+                <div class="zone-label">ZONA SENSORES / ENTRADAS</div>
+            </div>
+            <div class="zone" style="left:640px; top:80px; width:270px; height:620px;">
+                <div class="zone-label">ZONA CENTRAL — ESP32-S3</div>
+            </div>
+            <div class="zone" style="left:1100px; top:30px; width:830px; height:570px;">
+                <div class="zone-label">ZONA ACTUADORES / SALIDAS</div>
+            </div>
+            <div class="zone" style="left:1100px; top:630px; width:830px; height:530px;">
+                <div class="zone-label">ZONA POTENCIA</div>
+            </div>
+
+            <!-- SVG LAYERS -->
+            <svg class="buses-layer" id="busesLayer" viewBox="0 0 2400 1200" preserveAspectRatio="xMinYMin meet"></svg>
+            <svg class="wires-layer" id="wiresLayer" viewBox="0 0 2400 1200" preserveAspectRatio="xMinYMin meet"></svg>
+            <svg class="labels-layer" id="labelsLayer" viewBox="0 0 2400 1200" preserveAspectRatio="xMinYMin meet"></svg>
+
+            <!-- DESIGN NOTES (Callouts) -->
+            <div class="design-note warning" style="left:890px; top:90px;">
+                <span class="design-note-icon"></span>
+                <strong>VIN max 5.5V</strong><br>
+                NO conectar 12V directo al ESP32. Usar salida 5V del L298N.
+            </div>
+            <div class="design-note info" style="left:360px; top:570px;">
+                <span class="design-note-icon"></span>
+                <strong>I2C @ 400kHz</strong><br>
+                Pull-ups 4.7k Ohm en SDA/SCL
+            </div>
+            <div class="design-note" style="left:700px; top:645px;">
+                <span class="design-note-icon"></span>
+                <strong>GPIO9 para IN4</strong><br>
+                Reemplaza GPIO3 (strapping conflictivo) — C-02 resuelto
+            </div>
+
+            <!-- TITLE BLOCK -->
+            <div class="title-block">
+                <div class="title-block-title">DIAGRAMA DE ENSAMBLE</div>
+                <div class="title-block-row">
+                    <span class="title-block-label">Proyecto:</span>
+                    <span class="title-block-value">Carro Robot Autónomo</span>
+                </div>
+                <div class="title-block-row">
+                    <span class="title-block-label">MCU:</span>
+                    <span class="title-block-value">ESP32-S3-DevKitC-1</span>
+                </div>
+                <div class="title-block-row">
+                    <span class="title-block-label">Rev:</span>
+                    <span class="title-block-value">3.1</span>
+                </div>
+                <div class="title-block-row">
+                    <span class="title-block-label">Fecha:</span>
+                    <span class="title-block-value">Verano 2026</span>
+                </div>
+                <div class="title-block-row">
+                    <span class="title-block-label">Autor:</span>
+                    <span class="title-block-value">ITESS · VeranoInve</span>
+                </div>
+                <div class="title-block-row">
+                    <span class="title-block-label">Sheet:</span>
+                    <span class="title-block-value">1 / 1</span>
+                </div>
+            </div>
+
+            <!-- ESP32-S3 Microcontroller (CENTRO) -->
+            <div class="component" id="comp-esp32" style="left:660px; top:130px;" data-name="ESP32-S3-DevKitC-1" data-info="Microcontrolador principal. Lógica de E/S de 3.3V. LDO integrado 5V a 3.3V. VIN max 5.5V.">
+                <div class="comp-body" style="width:200px; height:420px; border-color:#3b82f6;">
+                    <div class="comp-label" style="color:#60a5fa;">ESP32-S3</div>
+                    <div class="comp-value">Microcontrolador (3.3V)</div>
+                    <div style="margin-top:8px; padding:4px; border:1px solid #1f2937; border-radius:2px; background:#0b0f19;">
+                        <div style="font-size:7px; color:#475569; text-align:center;">WROOM-N8</div>
+                        <div style="width:40px; height:40px; margin:4px auto; border:1px solid #334155; border-radius:2px; background:#111827;"></div>
+                    </div>
+                    <div style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:40px; height:14px; background:#1f2937; border:1px solid #374151; border-radius:2px;">
+                        <div style="font-size:6px; text-align:center; color:#9ca3af; line-height:14px;">USB-C</div>
+                    </div>
+                    
+                    <!-- Left Pins (Inputs/Sensors) -->
+                    <div class="comp-pin" style="left:-5px; top:50px; border-color:#ef4444;" data-pin="3v3" data-net="VCC_3V3"></div>
+                    <div class="comp-pin-label" style="left:10px; top:48px; color:#ef4444;">3V3</div>
+                    <div class="comp-pin" style="left:-5px; top:75px; border-color:#64748b;" data-pin="gnd1" data-net="GND"></div>
+                    <div class="comp-pin-label" style="left:10px; top:73px;">GND</div>
+                    <div class="comp-pin" style="left:-5px; top:110px; border-color:#22c55e;" data-pin="gp4" data-net="ENC_IZQ"></div>
+                    <div class="comp-pin-label" style="left:10px; top:108px;">GP4</div>
+                    <div class="comp-pin" style="left:-5px; top:140px; border-color:#3b82f6;" data-pin="gp5" data-net="ENC_DER"></div>
+                    <div class="comp-pin-label" style="left:10px; top:138px;">GP5</div>
+                    <div class="comp-pin" style="left:-5px; top:180px; border-color:#22c55e;" data-pin="gp6" data-net="SDA_BUS"></div>
+                    <div class="comp-pin-label" style="left:10px; top:178px;">GP6</div>
+                    <div class="comp-pin" style="left:-5px; top:210px; border-color:#3b82f6;" data-pin="gp7" data-net="SCL_BUS"></div>
+                    <div class="comp-pin-label" style="left:10px; top:208px;">GP7</div>
+                    <div class="comp-pin" style="left:-5px; top:250px; border-color:#ef4444;" data-pin="gp41" data-net="ESTOP_SIG"></div>
+                    <div class="comp-pin-label" style="left:10px; top:248px;">GP41</div>
+                    
+                    <!-- Right Pins (Outputs/Actuators) -->
+                    <div class="comp-pin" style="right:-5px; top:50px; border-color:#ef4444;" data-pin="vin" data-net="VCC_5V"></div>
+                    <div class="comp-pin-label" style="right:10px; top:48px; color:#ef4444;">5V VIN</div>
+                    <div class="comp-pin" style="right:-5px; top:75px; border-color:#64748b;" data-pin="gnd2" data-net="GND"></div>
+                    <div class="comp-pin-label" style="right:10px; top:73px;">GND</div>
+                    <div class="comp-pin" style="right:-5px; top:110px; border-color:#f97316;" data-pin="gp15" data-net="ENA_PWM"></div>
+                    <div class="comp-pin-label" style="right:10px; top:108px;">GP15</div>
+                    <div class="comp-pin" style="right:-5px; top:140px; border-color:#eab308;" data-pin="gp16" data-net="IN1_DIR"></div>
+                    <div class="comp-pin-label" style="right:10px; top:138px;">GP16</div>
+                    <div class="comp-pin" style="right:-5px; top:170px; border-color:#eab308;" data-pin="gp17" data-net="IN2_DIR"></div>
+                    <div class="comp-pin-label" style="right:10px; top:168px;">GP17</div>
+                    <div class="comp-pin" style="right:-5px; top:200px; border-color:#f97316;" data-pin="gp18" data-net="ENB_PWM"></div>
+                    <div class="comp-pin-label" style="right:10px; top:198px;">GP18</div>
+                    <div class="comp-pin" style="right:-5px; top:240px; border-color:#06b6d4;" data-pin="gp8" data-net="IN3_DIR"></div>
+                    <div class="comp-pin-label" style="right:10px; top:238px;">GP8</div>
+                    <div class="comp-pin" style="right:-5px; top:270px; border-color:#06b6d4;" data-pin="gp9" data-net="IN4_DIR"></div>
+                    <div class="comp-pin-label" style="right:10px; top:268px;">GP9</div>
+                    <div class="comp-pin" style="right:-5px; top:310px; border-color:#22c55e;" data-pin="gp38" data-net="LED_IDLE"></div>
+                    <div class="comp-pin-label" style="right:10px; top:308px;">GP38</div>
+                    <div class="comp-pin" style="right:-5px; top:340px; border-color:#3b82f6;" data-pin="gp39" data-net="LED_MOVING"></div>
+                    <div class="comp-pin-label" style="right:10px; top:338px;">GP39</div>
+                    <div class="comp-pin" style="right:-5px; top:370px; border-color:#ef4444;" data-pin="gp40" data-net="LED_ERROR"></div>
+                    <div class="comp-pin-label" style="right:10px; top:368px;">GP40</div>
+                </div>
+            </div>
+
+            <!-- L298N Motor Driver -->
+            <div class="component" id="comp-l298n" style="left:1170px; top:70px;" data-name="Puente H L298N" data-info="Módulo driver de motores. Recibe 12V (VMS) de la batería y provee salida regulada de 5V para el microcontrolador.">
+                <div class="comp-body" style="width:180px; height:280px; border-color:#f97316;">
+                    <div class="comp-label" style="color:#fb923c;">L298N</div>
+                    <div class="comp-value">Driver de Motores</div>
+                    <div style="margin-top:6px; padding:6px; background:#0b0f19; border:1px solid #1f2937; border-radius:2px;">
+                        <div style="display:flex; justify-content:space-between; font-size:7px; color:#475569;">
+                            <span>DISIPADOR</span><span>TO-220</span>
+                        </div>
+                        <div style="height:30px; background:linear-gradient(180deg,#1f2937,#0b0f19); border:1px solid #334155; margin-top:4px; border-radius:1px;"></div>
+                    </div>
+                    
+                    <!-- Left Pins (Signal Control Inputs) -->
+                    <div class="comp-pin" style="left:-5px; top:100px; border-color:#f97316;" data-pin="ena" data-net="ENA_PWM"></div>
+                    <div class="comp-pin-label" style="left:8px; top:98px;">ENA</div>
+                    <div class="comp-pin" style="left:-5px; top:130px; border-color:#eab308;" data-pin="in1" data-net="IN1_DIR"></div>
+                    <div class="comp-pin-label" style="left:8px; top:128px;">IN1</div>
+                    <div class="comp-pin" style="left:-5px; top:160px; border-color:#eab308;" data-pin="in2" data-net="IN2_DIR"></div>
+                    <div class="comp-pin-label" style="left:8px; top:158px;">IN2</div>
+                    <div class="comp-pin" style="left:-5px; top:195px; border-color:#f97316;" data-pin="enb" data-net="ENB_PWM"></div>
+                    <div class="comp-pin-label" style="left:8px; top:193px;">ENB</div>
+                    <div class="comp-pin" style="left:-5px; top:225px; border-color:#06b6d4;" data-pin="in3" data-net="IN3_DIR"></div>
+                    <div class="comp-pin-label" style="left:8px; top:223px;">IN3</div>
+                    <div class="comp-pin" style="left:-5px; top:255px; border-color:#06b6d4;" data-pin="in4" data-net="IN4_DIR"></div>
+                    <div class="comp-pin-label" style="left:8px; top:253px;">IN4</div>
+                    
+                    <!-- Right Pins (Motor Outputs) -->
+                    <div class="comp-pin" style="right:-5px; top:100px; border-color:#fbbf24;" data-pin="out1" data-net="MOTOR_L"></div>
+                    <div class="comp-pin-label" style="right:8px; top:98px;">OUT1</div>
+                    <div class="comp-pin" style="right:-5px; top:130px; border-color:#fbbf24;" data-pin="out2" data-net="MOTOR_L"></div>
+                    <div class="comp-pin-label" style="right:8px; top:128px;">OUT2</div>
+                    <div class="comp-pin" style="right:-5px; top:195px; border-color:#22d3ee;" data-pin="out3" data-net="MOTOR_R"></div>
+                    <div class="comp-pin-label" style="right:8px; top:193px;">OUT3</div>
+                    <div class="comp-pin" style="right:-5px; top:225px; border-color:#22d3ee;" data-pin="out4" data-net="MOTOR_R"></div>
+                    <div class="comp-pin-label" style="right:8px; top:223px;">OUT4</div>
+                    
+                    <!-- Power Input Terminal Pins (Bottom) -->
+                    <div class="comp-pin" style="left:30px; bottom:-5px; border-color:#ef4444;" data-pin="l298n_vms" data-net="VMS_12V"></div>
+                    <div class="comp-pin-label" style="left:15px; bottom:12px; font-size:7px;">VMS 12V</div>
+                    <div class="comp-pin" style="left:90px; bottom:-5px; border-color:#64748b;" data-pin="l298n_gnd" data-net="GND"></div>
+                    <div class="comp-pin-label" style="left:80px; bottom:12px; font-size:7px;">GND</div>
+                    <div class="comp-pin" style="left:150px; bottom:-5px; border-color:#ef4444;" data-pin="l298n_5v" data-net="VCC_5V"></div>
+                    <div class="comp-pin-label" style="left:135px; bottom:12px; font-size:7px; color:#ef4444;">5V OUT</div>
+                </div>
+            </div>
+
+            <!-- Motor Left -->
+            <div class="component" id="comp-motor-l" style="left:1570px; top:80px;" data-name="Motor Izquierdo" data-info="Motorreductor TT de corriente directa para tracción izquierda. Voltaje nominal: 3-6V.">
+                <div class="comp-body" style="width:100px; height:80px; border-color:#fbbf24;">
+                    <div class="comp-label" style="color:#fde68a;">Motor L</div>
+                    <div class="comp-value">TT Motor</div>
+                    <div style="margin-top:4px; display:flex; justify-content:center;">
+                        <div style="width:30px; height:30px; border:2px solid #fbbf24; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                            <div style="width:8px; height:8px; background:#fbbf24; border-radius:50%;"></div>
+                        </div>
+                    </div>
+                    <div class="comp-pin" style="left:-5px; top:25px; border-color:#fbbf24;" data-pin="m1a" data-net="MOTOR_L"></div>
+                    <div class="comp-pin" style="left:-5px; top:50px; border-color:#fbbf24;" data-pin="m1b" data-net="MOTOR_L"></div>
+                </div>
+            </div>
+
+            <!-- Motor Right -->
+            <div class="component" id="comp-motor-r" style="left:1570px; top:240px;" data-name="Motor Derecho" data-info="Motorreductor TT de corriente directa para tracción derecha. Voltaje nominal: 3-6V.">
+                <div class="comp-body" style="width:100px; height:80px; border-color:#22d3ee;">
+                    <div class="comp-label" style="color:#67e8f9;">Motor R</div>
+                    <div class="comp-value">TT Motor</div>
+                    <div style="margin-top:4px; display:flex; justify-content:center;">
+                        <div style="width:30px; height:30px; border:2px solid #22d3ee; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                            <div style="width:8px; height:8px; background:#22d3ee; border-radius:50%;"></div>
+                        </div>
+                    </div>
+                    <div class="comp-pin" style="left:-5px; top:25px; border-color:#22d3ee;" data-pin="m2a" data-net="MOTOR_R"></div>
+                    <div class="comp-pin" style="left:-5px; top:50px; border-color:#22d3ee;" data-pin="m2b" data-net="MOTOR_R"></div>
+                </div>
+            </div>
+
+            <!-- MPU6050 IMU -->
+            <div class="component" id="comp-mpu6050" style="left:130px; top:180px;" data-name="MPU6050" data-info="IMU 6-DOF. Mide aceleraciones y velocidades angulares. Conectado vía I2C a 400kHz. Alimentación: 3.3V.">
+                <div class="comp-body" style="width:160px; height:140px; border-color:#22c55e;">
+                    <div class="comp-label" style="color:#4ade80;">MPU6050</div>
+                    <div class="comp-value">IMU (I2C)</div>
+                    <div style="margin-top:6px; padding:4px; background:#0b0f19; border:1px solid #1f2937; border-radius:2px;">
+                        <div style="width:20px; height:20px; margin:0 auto; border:1px solid #334155; background:#111827; border-radius:2px;"></div>
+                        <div style="font-size:6px; color:#475569; text-align:center; margin-top:2px;">MEMS</div>
+                    </div>
+                    <div class="comp-pin" style="right:-5px; top:30px; border-color:#22c55e;" data-pin="vcc_mpu" data-net="VCC_3V3"></div>
+                    <div class="comp-pin-label" style="right:8px; top:28px;">VCC 3.3V</div>
+                    <div class="comp-pin" style="right:-5px; top:55px; border-color:#64748b;" data-pin="gnd_mpu" data-net="GND"></div>
+                    <div class="comp-pin-label" style="right:8px; top:53px;">GND</div>
+                    <div class="comp-pin" style="right:-5px; top:80px; border-color:#22c55e;" data-pin="sda_mpu" data-net="SDA_BUS"></div>
+                    <div class="comp-pin-label" style="right:8px; top:78px;">SDA</div>
+                    <div class="comp-pin" style="right:-5px; top:105px; border-color:#3b82f6;" data-pin="scl_mpu" data-net="SCL_BUS"></div>
+                    <div class="comp-pin-label" style="right:8px; top:103px;">SCL</div>
+                </div>
+            </div>
+
+            <!-- Encoders LM393 -->
+            <div class="component" id="comp-encoders" style="left:130px; top:420px;" data-name="Encoders Ópticos LM393" data-info="Encoders de herradura ópticos. Pulsos digitales por ranura del disco. Alimentación: 3.3V.">
+                <div class="comp-body" style="width:180px; height:160px; border-color:#a78bfa;">
+                    <div class="comp-label" style="color:#c4b5fd;">ENCODERS LM393</div>
+                    <div class="comp-value">Sensores Ópticos</div>
+                    <div style="margin-top:6px; display:flex; gap:8px; justify-content:center;">
+                        <div style="width:35px; height:35px; border:1px solid #7c3aed; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#111827;">
+                            <div style="width:20px; height:20px; border:1px dashed #7c3aed; border-radius:50%;"></div>
+                        </div>
+                        <div style="width:35px; height:35px; border:1px solid #7c3aed; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#111827;">
+                            <div style="width:20px; height:20px; border:1px dashed #7c3aed; border-radius:50%;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:center; gap:16px; font-size:7px; color:#475569; margin-top:2px;">
+                        <span>IZQ</span><span>DER</span>
+                    </div>
+                    <div class="comp-pin" style="right:-5px; top:40px; border-color:#22c55e;" data-pin="enc_izq" data-net="ENC_IZQ"></div>
+                    <div class="comp-pin-label" style="right:8px; top:38px;">D0-IZQ</div>
+                    <div class="comp-pin" style="right:-5px; top:70px; border-color:#3b82f6;" data-pin="enc_der" data-net="ENC_DER"></div>
+                    <div class="comp-pin-label" style="right:8px; top:68px;">D0-DER</div>
+                    <div class="comp-pin" style="right:-5px; top:100px; border-color:#ef4444;" data-pin="vcc_enc" data-net="VCC_3V3"></div>
+                    <div class="comp-pin-label" style="right:8px; top:98px;">VCC 3.3V</div>
+                    <div class="comp-pin" style="right:-5px; top:130px; border-color:#64748b;" data-pin="gnd_enc" data-net="GND"></div>
+                    <div class="comp-pin-label" style="right:8px; top:128px;">GND</div>
+                </div>
+            </div>
+
+            <!-- E-STOP (Emergency Stop) -->
+            <div class="component" id="comp-estop" style="left:130px; top:860px;" data-name="Boton de Parada de Emergencia" data-info="Pulsador NA para interrupción manual. Pull-down 10k Ohm externo. Activo Alto.">
+                <div class="comp-body" style="width:160px; height:100px; border-color:#ef4444;">
+                    <div class="comp-label" style="color:#f87171;">PARADA DE EMERGENCIA</div>
+                    <div class="comp-value">E-STOP (Activo Alto)</div>
+                    <div style="margin-top:8px; display:flex; justify-content:center;">
+                        <div style="width:36px; height:36px; border:2px solid #ef4444; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#1e1b1b;">
+                            <div style="width:18px; height:18px; background:#ef4444; border-radius:50%;"></div>
+                        </div>
+                    </div>
+                    <div class="comp-pin" style="right:-5px; top:30px; border-color:#ef4444;" data-pin="estop_sig" data-net="ESTOP_SIG"></div>
+                    <div class="comp-pin-label" style="right:8px; top:28px;">SIG</div>
+                    <div class="comp-pin" style="right:-5px; top:60px; border-color:#ef4444;" data-pin="estop_vcc" data-net="VCC_3V3"></div>
+                    <div class="comp-pin-label" style="right:8px; top:58px;">3V3</div>
+                    <div class="comp-pin" style="right:-5px; top:85px; border-color:#64748b;" data-pin="estop_gnd" data-net="GND"></div>
+                    <div class="comp-pin-label" style="right:8px; top:83px;">GND</div>
+                </div>
+            </div>
+
+            <!-- LEDs Status -->
+            <div class="component" id="comp-leds" style="left:1170px; top:440px;" data-name="LEDs de Estado" data-info="LEDs indicadores para diagnóstico de la FSM.">
+                <div class="comp-body" style="width:180px; height:130px; border-color:#a855f7;">
+                    <div class="comp-label" style="color:#c084fc;">LEDs ESTADO</div>
+                    <div class="comp-value">Indicadores FSM</div>
+                    <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px; padding:0 8px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:10px; height:10px; border-radius:50%; background:#22c55e;"></div>
+                            <span style="font-size:8px; color:#94a3b8;">IDLE to GP38</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:10px; height:10px; border-radius:50%; background:#3b82f6;"></div>
+                            <span style="font-size:8px; color:#94a3b8;">MOVING to GP39</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:10px; height:10px; border-radius:50%; background:#ef4444;"></div>
+                            <span style="font-size:8px; color:#94a3b8;">ERROR to GP40</span>
+                        </div>
+                    </div>
+                    <div class="comp-pin" style="left:-5px; top:40px; border-color:#22c55e;" data-pin="led_idle" data-net="LED_IDLE"></div>
+                    <div class="comp-pin" style="left:-5px; top:70px; border-color:#3b82f6;" data-pin="led_moving" data-net="LED_MOVING"></div>
+                    <div class="comp-pin" style="left:-5px; top:100px; border-color:#ef4444;" data-pin="led_error" data-net="LED_ERROR"></div>
+                </div>
+            </div>
+
+            <!-- Battery (LiPo 3S) -->
+            <div class="component" id="comp-battery" style="left:1400px; top:670px;" data-name="Batería LiPo 3S" data-info="LiPo 3S 11.1V nominal, 12.6V carga max. Energía bruta para motores via L298N.">
+                <div class="comp-body" style="width:160px; height:120px; border-color:#fbbf24;">
+                    <div class="comp-label" style="color:#fde68a;">BATERÍA LIPO</div>
+                    <div class="comp-value">LiPo 3S 11.1V / 12V</div>
+                    <div style="margin-top:6px; padding:6px; background:#0b0f19; border:1px solid #422006; border-radius:2px;">
+                        <div style="display:flex; gap:4px; justify-content:center;">
+                            <div style="width:20px; height:40px; background:linear-gradient(180deg,#854d0e,#422006); border:1px solid #5f370e; border-radius:2px;"></div>
+                            <div style="width:20px; height:40px; background:linear-gradient(180deg,#854d0e,#422006); border:1px solid #5f370e; border-radius:2px;"></div>
+                            <div style="width:20px; height:40px; background:linear-gradient(180deg,#854d0e,#422006); border:1px solid #5f370e; border-radius:2px;"></div>
+                        </div>
+                    </div>
+                    <div class="comp-pin" style="left:-5px; top:30px; border-color:#ef4444;" data-pin="bat_vms" data-net="VMS_12V"></div>
+                    <div class="comp-pin-label" style="left:8px; top:28px;">+12V</div>
+                    <div class="comp-pin" style="left:-5px; top:60px; border-color:#64748b;" data-pin="bat_gnd" data-net="GND"></div>
+                    <div class="comp-pin-label" style="left:8px; top:58px;">GND</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div class="side-panel" id="sidePanel">
+        <div class="panel-section">
+            <div class="panel-title">Tabla de Conexiones</div>
+            <div class="pin-table-header">
+                <div></div>
+                <div>Función</div>
+                <div>GPIO</div>
+                <div>Bus</div>
+            </div>
+            <div id="pinTable">
+                <div class="pin-row" onclick="highlightWire('gp15')">
+                    <div class="pin-dot" style="background:#f97316;"></div>
+                    <span class="pin-name">ENA (PWM Motor Izq)</span>
+                    <span class="pin-gpio">GP15</span>
+                    <span class="pin-bus">PWM</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp16')">
+                    <div class="pin-dot" style="background:#eab308;"></div>
+                    <span class="pin-name">IN1 (Dir Motor Izq)</span>
+                    <span class="pin-gpio">GP16</span>
+                    <span class="pin-bus">DIR_L</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp17')">
+                    <div class="pin-dot" style="background:#eab308;"></div>
+                    <span class="pin-name">IN2 (Dir Motor Izq)</span>
+                    <span class="pin-gpio">GP17</span>
+                    <span class="pin-bus">DIR_L</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp18')">
+                    <div class="pin-dot" style="background:#f97316;"></div>
+                    <span class="pin-name">ENB (PWM Motor Der)</span>
+                    <span class="pin-gpio">GP18</span>
+                    <span class="pin-bus">PWM</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp8')">
+                    <div class="pin-dot" style="background:#06b6d4;"></div>
+                    <span class="pin-name">IN3 (Dir Motor Der)</span>
+                    <span class="pin-gpio">GP8</span>
+                    <span class="pin-bus">DIR_R</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp9')">
+                    <div class="pin-dot" style="background:#06b6d4;"></div>
+                    <span class="pin-name">IN4 (Dir Motor Der)</span>
+                    <span class="pin-gpio">GP9</span>
+                    <span class="pin-bus">DIR_R</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('out1')">
+                    <div class="pin-dot" style="background:#fbbf24;"></div>
+                    <span class="pin-name">OUT1 (Motor Izq M1A)</span>
+                    <span class="pin-gpio">OUT1</span>
+                    <span class="pin-bus">MOT_L</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('out2')">
+                    <div class="pin-dot" style="background:#fbbf24;"></div>
+                    <span class="pin-name">OUT2 (Motor Izq M1B)</span>
+                    <span class="pin-gpio">OUT2</span>
+                    <span class="pin-bus">MOT_L</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('out3')">
+                    <div class="pin-dot" style="background:#22d3ee;"></div>
+                    <span class="pin-name">OUT3 (Motor Der M2A)</span>
+                    <span class="pin-gpio">OUT3</span>
+                    <span class="pin-bus">MOT_R</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('out4')">
+                    <div class="pin-dot" style="background:#22d3ee;"></div>
+                    <span class="pin-name">OUT4 (Motor Der M2B)</span>
+                    <span class="pin-gpio">OUT4</span>
+                    <span class="pin-bus">MOT_R</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp4')">
+                    <div class="pin-dot" style="background:#22c55e;"></div>
+                    <span class="pin-name">D0-IZQ (Encoder Izq)</span>
+                    <span class="pin-gpio">GP4</span>
+                    <span class="pin-bus">ENC</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp5')">
+                    <div class="pin-dot" style="background:#3b82f6;"></div>
+                    <span class="pin-name">D0-DER (Encoder Der)</span>
+                    <span class="pin-gpio">GP5</span>
+                    <span class="pin-bus">ENC</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp6')">
+                    <div class="pin-dot" style="background:#22c55e;"></div>
+                    <span class="pin-name">SDA (I2C Bus IMU)</span>
+                    <span class="pin-gpio">GP6</span>
+                    <span class="pin-bus">I2C</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp7')">
+                    <div class="pin-dot" style="background:#3b82f6;"></div>
+                    <span class="pin-name">SCL (I2C Bus IMU)</span>
+                    <span class="pin-gpio">GP7</span>
+                    <span class="pin-bus">I2C</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp38')">
+                    <div class="pin-dot" style="background:#22c55e;"></div>
+                    <span class="pin-name">LED IDLE (Reposo)</span>
+                    <span class="pin-gpio">GP38</span>
+                    <span class="pin-bus">LED</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp39')">
+                    <div class="pin-dot" style="background:#3b82f6;"></div>
+                    <span class="pin-name">LED MOVING (Marcha)</span>
+                    <span class="pin-gpio">GP39</span>
+                    <span class="pin-bus">LED</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp40')">
+                    <div class="pin-dot" style="background:#ef4444;"></div>
+                    <span class="pin-name">LED ERROR (Falla)</span>
+                    <span class="pin-gpio">GP40</span>
+                    <span class="pin-bus">LED</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('gp41')">
+                    <div class="pin-dot" style="background:#ef4444;"></div>
+                    <span class="pin-name">E-STOP (Emergencia)</span>
+                    <span class="pin-gpio">GP41</span>
+                    <span class="pin-bus">SAFE</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('pwr_12v')">
+                    <div class="pin-dot" style="background:#ef4444;"></div>
+                    <span class="pin-name">Potencia Batería (+12V)</span>
+                    <span class="pin-gpio">VMS</span>
+                    <span class="pin-bus">PWR</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('pwr_5v')">
+                    <div class="pin-dot" style="background:#ef4444;"></div>
+                    <span class="pin-name">Alimentación Regulada (+5V)</span>
+                    <span class="pin-gpio">VIN</span>
+                    <span class="pin-bus">PWR</span>
+                </div>
+                <div class="pin-row" onclick="highlightWire('esp_gnd')">
+                    <div class="pin-dot" style="background:#475569;"></div>
+                    <span class="pin-name">Línea de GND Común</span>
+                    <span class="pin-gpio">GND</span>
+                    <span class="pin-bus">GND</span>
+                </div>
+            </div>
+        </div>
+        <div class="panel-section">
+            <div class="panel-title">Información del Canal</div>
+            <div id="infoPanel" style="font-size:11px; color:#64748b;">
+                <p>Haga clic en un componente, cable o bus para ver detalles.</p>
+            </div>
+        </div>
+        <div class="panel-section">
+            <div class="panel-title">Contradicciones Resueltas (MDE)</div>
+            <div style="font-size:10px; display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; align-items:center; gap:6px; padding:4px; background:rgba(34,197,94,0.05); border-radius:4px;">
+                    <span style="color:#22c55e;">[Resuelto]</span><span style="color:#64748b;">C-02: GPIO3→GPIO9 (strapping fix)</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; padding:4px; background:rgba(34,197,94,0.05); border-radius:4px;">
+                    <span style="color:#22c55e;">[Resuelto]</span><span style="color:#64748b;">C-05/06: SSE→HTTP Polling</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; padding:4px; background:rgba(34,197,94,0.05); border-radius:4px;">
+                    <span style="color:#22c55e;">[Resuelto]</span><span style="color:#64748b;">C-11: Web queue→FSM</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; padding:4px; background:rgba(34,197,94,0.05); border-radius:4px;">
+                    <span style="color:#22c55e;">[Resuelto]</span><span style="color:#64748b;">C-12: Wire.begin() duplicado</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; padding:4px; background:rgba(34,197,94,0.05); border-radius:4px;">
+                    <span style="color:#22c55e;">[Resuelto]</span><span style="color:#64748b;">C-14: VIN 12V→5V (LDO safe)</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; padding:4px; background:rgba(34,197,94,0.05); border-radius:4px;">
+                    <span style="color:#22c55e;">[Resuelto]</span><span style="color:#64748b;">C-D1: HC-SR04 fantasma removido</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; padding:4px; background:rgba(34,197,94,0.05); border-radius:4px;">
+                    <span style="color:#22c55e;">[Resuelto]</span><span style="color:#64748b;">C-D2: Buzzer fantasma removido</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; padding:4px; background:rgba(34,197,94,0.05); border-radius:4px;">
+                    <span style="color:#22c55e;">[Resuelto]</span><span style="color:#64748b;">C-D3: CDN fonts→inline fallback</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend" id="legend">
+        <div class="legend-title">Leyenda de Conexiones</div>
+        <div class="legend-item"><div class="legend-line" style="background:#ef4444;"></div><span style="color:#64748b;">Alimentación (+)</span></div>
+        <div class="legend-item"><div class="legend-line" style="background:#475569;"></div><span style="color:#64748b;">GND (-)</span></div>
+        <div class="legend-item"><div class="legend-line" style="background:#f97316;"></div><span style="color:#64748b;">Habilitador PWM</span></div>
+        <div class="legend-item"><div class="legend-line" style="background:#eab308;"></div><span style="color:#64748b;">Dirección Motor Izq</span></div>
+        <div class="legend-item"><div class="legend-line" style="background:#06b6d4;"></div><span style="color:#64748b;">Dirección Motor Der</span></div>
+        <div class="legend-item"><div class="legend-line" style="background:#22c55e;"></div><span style="color:#64748b;">Bus SDA / Sensores</span></div>
+        <div class="legend-item"><div class="legend-line" style="background:#3b82f6;"></div><span style="color:#64748b;">Bus SCL / Sensores</span></div>
+        <div class="legend-title" style="margin-top:4px;">Buses Principales</div>
+        <div class="legend-item"><div class="legend-bus" style="background:#f97316;"></div><span style="color:#64748b;">BUS_PWM (ENA,ENB)</span></div>
+        <div class="legend-item"><div class="legend-bus" style="background:#eab308;"></div><span style="color:#64748b;">BUS_DIR_L (IN1,IN2)</span></div>
+        <div class="legend-item"><div class="legend-bus" style="background:#06b6d4;"></div><span style="color:#64748b;">BUS_DIR_R (IN3,IN4)</span></div>
+        <div class="legend-item"><div class="legend-bus" style="background:#22c55e;"></div><span style="color:#64748b;">BUS_I2C (SDA,SCL)</span></div>
+        <div class="legend-item"><div class="legend-bus" style="background:#ef4444;"></div><span style="color:#64748b;">BUS_PWR (12V,5V,3.3V)</span></div>
+    </div>
+
+    <!-- ZOOM CONTROLS -->
+    <div class="zoom-controls" id="zoomControls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <button class="zoom-btn" onclick="zoomOut()">-</button>
+        <button class="zoom-btn" onclick="resetView()">⟲</button>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+        <div class="status-item"><div class="status-dot"></div> Estado: Nominal</div>
+        <div class="status-item">Componentes: 8</div>
+        <div class="status-item">Buses: 5</div>
+        <div class="status-item">Conexiones: 20</div>
+        <div class="status-item" id="coordDisplay">X: 0 Y: 0</div>
+        <div class="status-item" style="margin-left:auto;">Modo: <span id="modeDisplay">Cables Físicos</span></div>
+        <div class="status-item">Zoom: <span id="zoomLevel">100%</span></div>
+    </div>
+
+    <!-- TOOLTIP -->
+    <div class="tooltip" id="tooltip">
+        <div class="tooltip-title" id="tooltipTitle"></div>
+        <div class="tooltip-detail" id="tooltipDetail"></div>
+    </div>
+
+    <script src="diagrama_ensamble.js"></script>
+</body>
+</html>

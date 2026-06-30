@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MDE History Schema",
+  "description": "Validacion de archivos PDCA y estructura .mde_history/",
+  "properties": {
+    "pdca_file": {
+      "type": "object",
+      "required": ["pdca_id", "title", "date", "action", "status", "plan", "do", "check", "act"],
+      "properties": {
+        "pdca_id": {"type": "integer", "minimum": 1},
+        "title": {"type": "string", "minLength": 5},
+        "date": {"type": "string", "format": "date-time"},
+        "action": {"type": "string", "enum": ["audit", "refactor", "design", "release", "documentation", "audit+refactor", "refactor+design"]},
+        "status": {"type": "string", "enum": ["completed", "in_progress", "cancelled"]},
+        "plan": {"type": "string", "minLength": 20},
+        "do": {"type": "string", "minLength": 20},
+        "check": {"type": "string", "minLength": 20},
+        "act": {"type": "string", "minLength": 10},
+        "syllogism": {"type": "string"},
+        "files_affected": {"type": "array", "items": {"type": "string"}},
+        "tests": {"type": "integer"},
+        "agents": {"type": "integer"},
+        "tokens_used": {"type": "integer"},
+        "tools_installed": {"type": "array", "items": {"type": "string"}},
+        "new_modules": {"type": "array", "items": {"type": "string"}},
+        "new_groups": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
