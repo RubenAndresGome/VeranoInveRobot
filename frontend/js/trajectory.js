@@ -58,6 +58,8 @@ class TrayectoriaCanvas {
                 this.zoomOut();
             }
         });
+        
+        this.canvasFg.addEventListener('click', (e) => {
             if(Date.now() - this._lastTouch < 300) return;
             this.click(e);
         });
