@@ -83,3 +83,28 @@ extern portMUX_TYPE muxFsmOverride;
 
 // Broadcast de emergencia a todos los clientes WS
 void web_server_broadcast(const char* msg);
+
+// ── Protocolo Binario de Telemetria (52 bytes, sin heap) ──
+#pragma pack(push, 1)
+struct TelemetryBinary {
+    uint8_t version;       // 0x01 — version del protocolo
+    uint8_t estado;        // FSM: 0=INIT, 1=CALIBRATING, 2=IDLE, 3=ADVANCING, 4=TURNING, 5=BRAKING, 6=ESTOP, 7=MANUAL
+    float distancia;       // cm
+    float angulo;          // grados
+    int32_t pulsosIzq;
+    int32_t pulsosDer;
+    uint16_t pwmIzq;       // 0-255
+    uint16_t pwmDer;       // 0-255
+    float posX;            // cm
+    float posY;            // cm
+    float orientacion;     // radianes
+    float pidCorr;
+    float distRestante;    // cm
+    float targetDist;      // cm
+    uint16_t targetVel;    // PWM
+    uint16_t padding;      // alineacion a 4 bytes
+};
+#pragma pack(pop)
+
+// Mapear estado FSM string -> uint8
+uint8_t estadoToUint8(const char* estado);

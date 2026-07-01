@@ -476,6 +476,30 @@ window.wsClient = {
     pollFail: 0,
     wsReconnecting: false,
 
+    FSM_MAP: ['INIT','CALIBRATING','IDLE','ADVANCING','TURNING','BRAKING','ESTOP','MANUAL'],
+
+    decodeBinaryTelemetry(buffer){
+        if (!buffer || buffer.byteLength < 2) return null;
+        const v = new DataView(buffer);
+        if (v.getUint8(0) !== 0x01) return null; // version mismatch
+        return {
+            estado:   this.FSM_MAP[v.getUint8(1)] || 'IDLE',
+            distancia:v.getFloat32(2, true),
+            angulo:   v.getFloat32(6, true),
+            pulsosIzq:v.getInt32(10, true),
+            pulsosDer:v.getInt32(14, true),
+            pwmIzq:   v.getUint16(18, true),
+            pwmDer:   v.getUint16(20, true),
+            posX:     v.getFloat32(22, true),
+            posY:     v.getFloat32(26, true),
+            orientacion:v.getFloat32(30, true),
+            pidCorr:  v.getFloat32(34, true),
+            distRestante:v.getFloat32(38, true),
+            targetDist:  v.getFloat32(42, true),
+            targetVel:   v.getUint16(46, true)
+        };
+    },
+
     applyTelemetry(t){
         if(!t)return
         
@@ -507,6 +531,7 @@ window.wsClient = {
         const url=proto+'//'+host+'/ws'
         window.ui.log('SYS','WS: Conectando a '+url)
         this.ws=new WebSocket(url)
+        this.ws.binaryType = 'arraybuffer'
         
         this.ws.onopen=()=>{
             window.ui.log('SYS','WS: Conectado');
@@ -526,11 +551,25 @@ window.wsClient = {
         this.ws.onerror=()=>{
             this.wsFail++;
             if(this.wsFail===1){
-                window.ui.log('WARN','WS: Error de conexión');
+                window.ui.log('WARN','WS: Error de conexion');
                 if(!this.pollInterval)this.startPollFallback();
             }
         }
         this.ws.onmessage=(e)=>{
+            if (e.data instanceof ArrayBuffer) {
+                const t = this.decodeBinaryTelemetry(e.data);
+                if (t) {
+                    this.applyTelemetry(t);
+                    if(window.app && window.app.canvasTrayectoria) {
+                        window.app.canvasTrayectoria.setRobotPos(t.posX || 0, t.posY || 0, t.angulo || 0);
+                    }
+                    const needle = document.getElementById('gyro-needle');
+                    if(needle) needle.style.transform = `rotate(${t.angulo || 0}deg)`;
+                    const gyroVal = document.getElementById('gyro-value');
+                    if(gyroVal) gyroVal.textContent = (t.angulo || 0).toFixed(1) + '\u00B0';
+                }
+                return;
+            }
             try{
                 const d=JSON.parse(e.data)
                 if(d.tipo==='telem') {
@@ -541,7 +580,10 @@ window.wsClient = {
                     const needle = document.getElementById('gyro-needle');
                     if(needle) needle.style.transform = `rotate(${d.angulo || 0}deg)`;
                     const gyroVal = document.getElementById('gyro-value');
-                    if(gyroVal) gyroVal.textContent = (d.angulo || 0).toFixed(1) + '°';
+                    if(gyroVal) gyroVal.textContent = (d.angulo || 0).toFixed(1) + '\u00B0';
+                }
+                if(d.tipo==='estop'){
+                    window.ui.log('ERR','E-STOP recibido del servidor');
                 }
             }catch(err){}
         }
@@ -746,6 +788,66 @@ class TrayectoriaCanvas {
     limpiar() {
         this.colaPasos = [];
         this.drawForeground();
+    }
+    
+    enviarRutaBinaria() {
+        if (this.colaPasos.length === 0) return;
+        
+        const N = this.colaPasos.length;
+        const headerSize = 2;
+        const waypointSize = 16; // sizeof(PuntoRuta) = float+float+int32+uint32
+        const totalSize = headerSize + N * waypointSize;
+        
+        const buffer = new ArrayBuffer(totalSize);
+        const view = new DataView(buffer);
+        view.setUint16(0, N, true); // count LE
+        
+        let offset = headerSize;
+        let prevX = this.robotPos.x || 0;
+        let prevY = this.robotPos.y || 0;
+        let prevHeading = 0;
+        
+        this.colaPasos.forEach(p => {
+            const dx = p.x - prevX;
+            const dy = p.y - prevY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const targetHeading = Math.atan2(dy, dx);
+            let diffAng = (targetHeading - prevHeading) * 180 / Math.PI;
+            // Normalize to [-180, 180]
+            while (diffAng > 180) diffAng -= 360;
+            while (diffAng < -180) diffAng += 360;
+            
+            // If turn needed, encode as separate waypoint
+            if (Math.abs(diffAng) > 1.0) {
+                // Giro waypoint
+                view.setFloat32(offset, 0, true); offset += 4;   // distancia=0
+                view.setFloat32(offset, diffAng, true); offset += 4; // angulo
+                view.setInt32(offset, 130, true); offset += 4;   // velocidad
+                view.setUint32(offset, 5000, true); offset += 4; // duracion
+            }
+            
+            if (dist > 0.1) {
+                // Avance waypoint
+                view.setFloat32(offset, dist, true); offset += 4;
+                view.setFloat32(offset, 0, true); offset += 4;
+                view.setInt32(offset, 150, true); offset += 4;
+                view.setUint32(offset, Math.round(dist / 5.0 * 1000) + 2000, true); offset += 4;
+            }
+            
+            prevX = p.x;
+            prevY = p.y;
+            prevHeading = targetHeading;
+        });
+        
+        // Trim to actual size
+        const final = buffer.slice(0, offset);
+        
+        if (window.wsClient && window.wsClient.ws && window.wsClient.ws.readyState === WebSocket.OPEN) {
+            window.wsClient.ws.send(final);
+            if (window.ui) window.ui.log('CMD', 'Ruta binaria enviada (' + N + ' waypoints, ' + final.byteLength + ' bytes)');
+        }
+        
+        this.limpiar();
     }
     
     setRobotPos(x, y, angulo) {

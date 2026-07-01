@@ -5,6 +5,30 @@ window.wsClient = {
     pollFail: 0,
     wsReconnecting: false,
 
+    FSM_MAP: ['INIT','CALIBRATING','IDLE','ADVANCING','TURNING','BRAKING','ESTOP','MANUAL'],
+
+    decodeBinaryTelemetry(buffer){
+        if (!buffer || buffer.byteLength < 2) return null;
+        const v = new DataView(buffer);
+        if (v.getUint8(0) !== 0x01) return null; // version mismatch
+        return {
+            estado:   this.FSM_MAP[v.getUint8(1)] || 'IDLE',
+            distancia:v.getFloat32(2, true),
+            angulo:   v.getFloat32(6, true),
+            pulsosIzq:v.getInt32(10, true),
+            pulsosDer:v.getInt32(14, true),
+            pwmIzq:   v.getUint16(18, true),
+            pwmDer:   v.getUint16(20, true),
+            posX:     v.getFloat32(22, true),
+            posY:     v.getFloat32(26, true),
+            orientacion:v.getFloat32(30, true),
+            pidCorr:  v.getFloat32(34, true),
+            distRestante:v.getFloat32(38, true),
+            targetDist:  v.getFloat32(42, true),
+            targetVel:   v.getUint16(46, true)
+        };
+    },
+
     applyTelemetry(t){
         if(!t)return
         
@@ -36,6 +60,7 @@ window.wsClient = {
         const url=proto+'//'+host+'/ws'
         window.ui.log('SYS','WS: Conectando a '+url)
         this.ws=new WebSocket(url)
+        this.ws.binaryType = 'arraybuffer'
         
         this.ws.onopen=()=>{
             window.ui.log('SYS','WS: Conectado');
@@ -55,11 +80,25 @@ window.wsClient = {
         this.ws.onerror=()=>{
             this.wsFail++;
             if(this.wsFail===1){
-                window.ui.log('WARN','WS: Error de conexión');
+                window.ui.log('WARN','WS: Error de conexion');
                 if(!this.pollInterval)this.startPollFallback();
             }
         }
         this.ws.onmessage=(e)=>{
+            if (e.data instanceof ArrayBuffer) {
+                const t = this.decodeBinaryTelemetry(e.data);
+                if (t) {
+                    this.applyTelemetry(t);
+                    if(window.app && window.app.canvasTrayectoria) {
+                        window.app.canvasTrayectoria.setRobotPos(t.posX || 0, t.posY || 0, t.angulo || 0);
+                    }
+                    const needle = document.getElementById('gyro-needle');
+                    if(needle) needle.style.transform = `rotate(${t.angulo || 0}deg)`;
+                    const gyroVal = document.getElementById('gyro-value');
+                    if(gyroVal) gyroVal.textContent = (t.angulo || 0).toFixed(1) + '\u00B0';
+                }
+                return;
+            }
             try{
                 const d=JSON.parse(e.data)
                 if(d.tipo==='telem') {
@@ -70,7 +109,10 @@ window.wsClient = {
                     const needle = document.getElementById('gyro-needle');
                     if(needle) needle.style.transform = `rotate(${d.angulo || 0}deg)`;
                     const gyroVal = document.getElementById('gyro-value');
-                    if(gyroVal) gyroVal.textContent = (d.angulo || 0).toFixed(1) + '°';
+                    if(gyroVal) gyroVal.textContent = (d.angulo || 0).toFixed(1) + '\u00B0';
+                }
+                if(d.tipo==='estop'){
+                    window.ui.log('ERR','E-STOP recibido del servidor');
                 }
             }catch(err){}
         }

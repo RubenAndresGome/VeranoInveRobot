@@ -201,9 +201,10 @@ static void handle_body_accumulation(AsyncWebServerRequest *request, uint8_t *da
         request->_tempObject = new String();
     }
     String* body = (String*)request->_tempObject;
-    for (size_t i = 0; i < len; i++) {
-        body->concat((char)data[i]);
+    if (index == 0 && total > 0) {
+        body->reserve(total);  // Pre-allocate — avoids heap fragmentation
     }
+    body->concat((const char*)data, len);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -585,43 +586,70 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
                 Serial.println("[WS] E-STOP!");
             }
         }
+        else if (info->final && info->index == 0 && info->len == len && info->opcode == WS_BINARY) {
+            // Binary route: uint16 count + N x PuntoRuta (direct memcpy, O(1))
+            if (len >= sizeof(uint16_t)) {
+                uint16_t count;
+                memcpy(&count, data, sizeof(uint16_t));
+                
+                size_t expected = sizeof(uint16_t) + count * sizeof(PuntoRuta);
+                if (len >= expected && count > 0 && count <= COLA_MAX_COMANDOS) {
+                    portENTER_CRITICAL(&muxComandos);
+                    colaHead = 0; colaTail = 0; colaCount = 0;
+                    for (uint16_t i = 0; i < count && colaCount < COLA_MAX_COMANDOS; i++) {
+                        PuntoRuta cmd;
+                        memcpy(&cmd, data + sizeof(uint16_t) + i * sizeof(PuntoRuta), sizeof(PuntoRuta));
+                        colaComandos[colaTail] = cmd;
+                        colaTail = (colaTail + 1) % COLA_MAX_COMANDOS;
+                        colaCount++;
+                    }
+                    portEXIT_CRITICAL(&muxComandos);
+                    Serial.printf("[WS] Ruta binaria: %d waypoints\n", count);
+                }
+            }
+        }
     }
 }
 
-// PUSH telemetry to all WebSocket clients
+// ── FSM state to numeric (for binary protocol) ──
+uint8_t estadoToUint8(const char* estado) {
+    if (strcmp(estado, "INIT") == 0) return 0;
+    if (strcmp(estado, "CALIBRATING") == 0) return 1;
+    if (strcmp(estado, "IDLE") == 0) return 2;
+    if (strcmp(estado, "ADVANCING") == 0) return 3;
+    if (strcmp(estado, "TURNING") == 0) return 4;
+    if (strcmp(estado, "BRAKING") == 0) return 5;
+    if (strcmp(estado, "ESTOP") == 0) return 6;
+    if (strcmp(estado, "MANUAL") == 0) return 7;
+    return 2; // default: IDLE
+}
+
+// PUSH telemetry to all WebSocket clients (binary, 0 heap alloc)
 static void ws_push_telemetry() {
     if (clientesSSE == 0) return;
     
+    TelemetryBinary bin;
+    bin.version = 0x01;
+    
     portENTER_CRITICAL(&muxTelWeb);
-    float d_dist = tel_distancia, d_ang = tel_angulo;
-    long d_pI = tel_pulsosIzq, d_pD = tel_pulsosDer;
-    int d_pwmI = tel_pwmIzq, d_pwmD = tel_pwmDer;
-    char d_est[16]; strcpy(d_est, tel_estado);
-    float d_pX = tel_posX, d_pY = tel_posY, d_ort = tel_orientacion;
-    float d_pid = tel_pidCorr, d_rest = tel_distRestante, d_tgt = tel_targetDist;
-    int d_tVel = tel_targetVel;
+    bin.estado = estadoToUint8(tel_estado);
+    bin.distancia = tel_distancia;
+    bin.angulo = tel_angulo;
+    bin.pulsosIzq = tel_pulsosIzq;
+    bin.pulsosDer = tel_pulsosDer;
+    bin.pwmIzq = (uint16_t)tel_pwmIzq;
+    bin.pwmDer = (uint16_t)tel_pwmDer;
+    bin.posX = tel_posX;
+    bin.posY = tel_posY;
+    bin.orientacion = tel_orientacion;
+    bin.pidCorr = tel_pidCorr;
+    bin.distRestante = tel_distRestante;
+    bin.targetDist = tel_targetDist;
+    bin.targetVel = (uint16_t)tel_targetVel;
+    bin.padding = 0;
     portEXIT_CRITICAL(&muxTelWeb);
     
-    JsonDocument doc;
-    doc["tipo"] = "telem";
-    doc["distancia"] = d_dist;
-    doc["angulo"] = d_ang;
-    doc["pulsosIzq"] = d_pI;
-    doc["pulsosDer"] = d_pD;
-    doc["pwmIzq"] = d_pwmI;
-    doc["pwmDer"] = d_pwmD;
-    doc["estado"] = d_est;
-    doc["posX"] = d_pX;
-    doc["posY"] = d_pY;
-    doc["orientacion"] = d_ort;
-    doc["pidCorr"] = d_pid;
-    doc["distRestante"] = d_rest;
-    doc["targetDist"] = d_tgt;
-    doc["targetVel"] = d_tVel;
-    
-    String json;
-    serializeJson(doc, json);
-    ws.textAll(json);
+    ws.binaryAll((uint8_t*)&bin, sizeof(TelemetryBinary));
 }
 
 // ─────────────────────────────────────────────────────────────────────
