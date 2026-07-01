@@ -76,5 +76,10 @@ bool web_server_enqueue_command(PuntoRuta cmd);
 // Bandera de reset solicitado desde WebSocket (consultada desde main loop)
 extern volatile bool wsResetRequested;
 
+// Banderas para forzar estado de FSM desde el frontend Debug
+extern volatile bool wsFsmOverrideRequest;
+extern char wsForcedFsmState[16];
+extern portMUX_TYPE muxFsmOverride;
+
 // Broadcast de emergencia a todos los clientes WS
 void web_server_broadcast(const char* msg);

@@ -43,6 +43,11 @@ int clientesSSE = 0;
 // Bandera de reset solicitado desde WebSocket (consultada desde main loop)
 volatile bool wsResetRequested = false;
 
+// Variables para forzar FSM (Modo Debug)
+volatile bool wsFsmOverrideRequest = false;
+char wsForcedFsmState[16] = "";
+portMUX_TYPE muxFsmOverride = portMUX_INITIALIZER_UNLOCKED;
+
 // Variables globales para la telemetría del polling (protegidas por muxTelWeb)
 float tel_distancia = 0;
 float tel_angulo = 0;
@@ -491,6 +496,14 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
                 char dir = msg[3];
                 int pwm = atoi(msg + 5);
                 setMotorsManual(dir, pwm);
+            }
+            else if (strncmp(msg, "FSM:", 4) == 0) {
+                portENTER_CRITICAL(&muxFsmOverride);
+                strncpy(wsForcedFsmState, msg + 4, sizeof(wsForcedFsmState)-1);
+                wsForcedFsmState[sizeof(wsForcedFsmState)-1] = '\0';
+                wsFsmOverrideRequest = true;
+                portEXIT_CRITICAL(&muxFsmOverride);
+                Serial.printf("[WS] Forzando FSM a: %s\n", msg + 4);
             }
             else if (strncmp(msg, "RUTA:", 5) == 0) {
                 // Convertir ruta absoluta a comandos de avance y giro en cola circular

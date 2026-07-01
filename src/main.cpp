@@ -741,6 +741,29 @@ void loop() {
         cambiarEstado(STATE_ESTOP);
     }
 
+    // ③.5 Modo Debug FSM Override (solicitado via WebSocket)
+    if (wsFsmOverrideRequest) {
+        portENTER_CRITICAL(&muxFsmOverride);
+        wsFsmOverrideRequest = false;
+        String reqState = String(wsForcedFsmState);
+        portEXIT_CRITICAL(&muxFsmOverride);
+        
+        EstadoRobot nuevo = estado;
+        if(reqState == "INIT") nuevo = STATE_INIT;
+        else if(reqState == "CALIBRATING") nuevo = STATE_CALIBRATING;
+        else if(reqState == "IDLE") nuevo = STATE_IDLE;
+        else if(reqState == "ADVANCING") nuevo = STATE_ADVANCING;
+        else if(reqState == "TURNING") nuevo = STATE_TURNING;
+        else if(reqState == "BRAKING") nuevo = STATE_BRAKING;
+        else if(reqState == "ESTOP") nuevo = STATE_ESTOP;
+        else if(reqState == "MANUAL") nuevo = STATE_MANUAL;
+        
+        if (nuevo != estado) {
+            Serial.printf("[DEBUG] Forzando FSM override web: %s\n", wsForcedFsmState);
+            cambiarEstado(nuevo);
+        }
+    }
+
     // ④ Ejecutar tick del estado actual
     switch (estado) {
         case STATE_INIT:

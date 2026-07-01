@@ -121,6 +121,8 @@ Servidor → Cliente:
   {"tipo":"telem","distancia":45.3,...}    Push 10Hz
   {"tipo":"estop"}                         Broadcast en emergencia
   {"tipo":"pong"}                          Respuesta PING
+
+*Nota FSM Debug (PDCA 016)*: `FSM:<estado>` fuerza a la FSM principal a saltar al estado enviado (ej. `FSM:CALIBRATING`) bypassando transiciones seguras. Útil para depuración o desatorar el hardware.
 ```
 
 ### Comandos Serial (115200 baud)
@@ -171,7 +173,7 @@ VeranoInve/
 ├── .opencode/skills/
 │   ├── supervisor-metadialectico.md  # Agente filosofico principal
 │   └── ockham-razor.md              # Agente hilemorfico + graph queries
-├── .mde_history/               # Historial PDCA (15 sesiones)
+├── .mde_history/               # Historial PDCA (16 sesiones)
 ├── SISTEMA_ACTUAL.md           # Este documento
 ├── README.md                   # Documentacion principal
 └── LICENSE.md                  # Rerum Novarum v1.0
@@ -192,6 +194,11 @@ VeranoInve/
 - **Metodo:** Verificacion hilemorfica (Materia+Forma=Sustancia) via graph queries
 - **Herramienta:** codebase-memory-mcp (search_graph, trace_path, query_graph, get_code_snippet)
 - **Formato:** Veredicto escolastico (Quaestio → Videtur → Sed contra → Respondeo)
+
+### Indexator Graphicus (Skill de Dependencias)
+- **Archivo:** `.opencode/skills/grafo-dependencias.md`
+- **Metodo:** Verificacion de acoplamiento fisico vs topologia teorica
+- **Resultado Auditoria MDE (Fase 0):** `platformio.ini` coincide exactamente con los `includes` de la capa `src/`. No hay dependencias circulares detectadas entre el WebServer, FSM y Controladores Hardware. El Grafo de Conocimiento local ha sido trazado (mapeo del 100% de `#include`).
 
 ---
 
@@ -259,7 +266,7 @@ El panel de control esta embebido en `src/UserControlGUI.cpp` como string C++ ra
                 <div id="joystick-container">
                     <div id="joystick-knob"></div>
                 </div>
-                <!-- Canvas trayectoria + Giroscopio SVG -->
+                <!-- Canvas trayectoria dual-layer + zoom + fullscreen glass -->
                 <canvas id="canvas-trayectoria"></canvas>
                 <svg id="gyro-needle">...</svg>
             </div>

@@ -46,18 +46,102 @@ body{margin:0;font-family:'Courier New',Consolas,monospace;background:var(--sl-9
 .card-local-log::-webkit-scrollbar-thumb{background:var(--cy-700)}
 .fs-btn{font-size:10px;padding:1px 6px;border:1px solid var(--sl-600);color:var(--sl-400);background:none;cursor:pointer;border-radius:2px;transition:.2s}
 .fs-btn:hover{border-color:var(--cy-400);color:var(--cy-400)}
-:fullscreen .panel-tech{height:100vh;width:100vw;display:flex;flex-direction:column}
-:fullscreen .card-content{flex:1}
+:fullscreen .panel-tech{height:100vh;width:100vw;display:flex;flex-direction:column;border-radius:0;clip-path:none;}
+:fullscreen .traj-container{flex:1;}
+:fullscreen .canvas-container{height:100%;border-radius:0;border:none;}
 :fullscreen .card-local-log{height:60px}
-:-webkit-full-screen .panel-tech{height:100vh;width:100vw;display:flex;flex-direction:column}
-:-webkit-full-screen .card-content{flex:1}
+:-webkit-full-screen .panel-tech{height:100vh;width:100vw;display:flex;flex-direction:column;border-radius:0;clip-path:none;}
+:-webkit-full-screen .traj-container{flex:1;}
+:-webkit-full-screen .canvas-container{height:100%;border-radius:0;border:none;}
 :-webkit-full-screen .card-local-log{height:60px}
+
+/* Custom Utility & Layout Classes for index.html */
+.app-header { border-bottom:1px solid rgba(34,211,238,.3); background:rgba(15,23,42,.8); padding:10px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.header-logo-container { display:flex; align-items:center; gap:10px; }
+.logo-dot { width:10px; height:10px; background:var(--cy-400); border-radius:50%; box-shadow:0 0 10px var(--cy-400); animation:pulse-cyan 2s infinite; }
+@keyframes pulse-cyan { 0%, 100% { box-shadow: 0 0 5px rgba(34,211,238,0.3); } 50% { box-shadow: 0 0 15px rgba(34,211,238,0.8); } }
+.header-title { color:var(--cy-400); font-size:18px; font-weight:700; letter-spacing:3px; }
+.header-info { display:flex; align-items:center; gap:16px; font-size:11px; }
+.fsm-badge-idle { border-color:var(--cy-500); color:var(--cy-400); }
+.main-container { max-width:1600px; margin:20px auto; padding:0 15px; }
+
+.panel-col { padding:20px; display:flex; flex-direction:column; gap:20px; }
+.panel-title { color:white; font-size:18px; font-weight:bold; margin-bottom:10px; }
+
+.btn-dir-turn { background:var(--pu-600); border-color:var(--pu-400); color:white; }
+.btn-dir-rev { background:var(--am-600); border-color:var(--am-400); color:white; }
+
+.pwm-widget { background:rgba(15,23,42,0.6); padding:16px; border-radius:12px; border:1px solid var(--sl-700); }
+.pwm-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.pwm-title { color:white; font-weight:bold; }
+.pwm-value { background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; color:var(--cy-400); }
+.pwm-slider-container { display:flex; align-items:center; gap:10px; }
+.pwm-icon { font-size:24px; color:var(--ye-400); }
+
+.estop-container { margin-top:auto; }
+.btn-estop-full { width:100%; border-radius:8px; }
+
+.grid-2col-gap16 { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+.data-label-mb4 { margin-bottom:4px; }
+.text-pu-300 { color:var(--pu-300); }
+
+.traj-container { flex:1; display:flex; flex-direction:column; gap:8px; }
+.flex-between { display:flex; justify-content:space-between; }
+.data-value-sm { font-size:10px; }
+.canvas-container { position:relative; background:#020617; border:1px solid var(--sl-700); border-radius:8px; height:200px; width:100%; overflow:hidden; }
+.canvas-layer { position:absolute; top:0; left:0; width:100%; height:100%; touch-action:none; }
+
+.btn-glass-fs { position:absolute; top:10px; right:10px; z-index:10; background:linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0)); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.18); border-radius:8px; color:white; width:36px; height:36px; font-size:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 8px 32px 0 rgba(0,0,0,0.37); transition:all 0.3s ease; outline:none; }
+.btn-glass-fs:hover { background:linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05)); border:1px solid rgba(34,211,238,0.5); color:var(--cy-400); box-shadow:0 0 15px rgba(34,211,238,0.3); transform:translateY(-2px); }
+.btn-glass-fs:active { transform:scale(0.95); }
+
+.zoom-controls { position:absolute; bottom:10px; right:10px; z-index:10; display:flex; flex-direction:column; gap:4px; }
+.btn-glass-zoom { background:linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0)); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.18); border-radius:6px; color:white; width:28px; height:28px; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; }
+.btn-glass-zoom:hover { color:var(--cy-400); border-color:rgba(34,211,238,0.5); }
+
+
+.pwm-bar-row { display:grid; grid-template-columns: 60px 1fr 40px; align-items:center; gap:10px; margin-top:8px; }
+.pwm-bar-label { color:var(--sl-300); font-size:12px; }
+.pwm-bar-val { font-size:12px; color:var(--cy-400); text-align:right; }
+.enc-row { display:flex; justify-content:space-between; margin-top:8px; font-size:10px; color:var(--sl-500); }
+.w-0 { width: 0%; }
+
+.input-tech { width:100%; background:#020617; border:1px solid var(--sl-700); color:white; padding:8px; border-radius:4px; outline:none; }
+.grid-2col-gap10 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+.btn-cmd-add { background:var(--pu-600); border-color:var(--pu-400); }
+.btn-cmd-go { background:var(--em-600); border-color:var(--em-400); }
+
+.waypoints-container { flex:1; background:rgba(2,6,23,0.5); border:1px solid var(--sl-700); border-radius:8px; padding:10px; display:flex; flex-direction:column; }
+.data-label-mb8 { margin-bottom:8px; }
+.waypoints-list { flex:1; overflow-y:auto; font-size:11px; color:var(--sl-300); display:flex; flex-direction:column; gap:4px; }
+.wp-item { background:rgba(255,255,255,0.03); border:1px solid var(--sl-800); border-radius:6px; padding:6px 8px; border-left:3px solid var(--pu-500); }
+.wp-item-header { display:flex; justify-content:space-between; color:var(--pu-300); margin-bottom:2px; font-weight:bold; }
+.wp-item-details { display:flex; justify-content:space-between; color:var(--sl-400); }
+.waypoints-empty { text-align:center; margin-top:20px; opacity:0.5; padding:10px; }
+.btn-cmd-clear { width:100%; margin-top:10px; background:var(--sl-700); }
+
+/* --- NUEVAS CLASES PARA FSM DEBUG Y CRM NOTIFICACIONES --- */
+.fsm-debug-container { display:flex; align-items:center; gap:8px; margin-left:16px; border-left:1px solid var(--sl-700); padding-left:16px; }
+.fsm-select { background:rgba(2,6,23,0.8); border:1px solid var(--sl-600); color:var(--sl-200); font-family:monospace; font-size:10px; border-radius:4px; outline:none; cursor:pointer; }
+.fsm-force-btn { position:static !important; width:28px !important; height:28px !important; font-size:12px !important; box-shadow:none !important; border-radius:4px !important; margin-left:4px; }
+.btn-glass-crm { position:relative; background:linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.15); border-radius:50%; color:var(--cy-400); width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-left:16px; transition:0.3s; }
+.btn-glass-crm:hover { box-shadow:0 0 15px rgba(34,211,238,0.3); transform:translateY(-1px); }
+.notif-badge { position:absolute; top:-2px; right:-2px; background:var(--ye-500); color:#000; font-size:9px; font-weight:bold; border-radius:10px; padding:2px 5px; }
+
+/* Offcanvas Notifications Panel */
+.notifications-panel { position:fixed; top:60px; right:20px; width:300px; max-height:calc(100vh - 80px); background:rgba(15,23,42,0.95); backdrop-filter:blur(12px); border:1px solid var(--cy-700); border-radius:12px; z-index:100; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,0.5); overflow:hidden; }
+.notif-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:linear-gradient(90deg, rgba(14,165,233,0.2), transparent); border-bottom:1px solid var(--sl-700); font-weight:bold; color:var(--cy-300); }
+.notif-list { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
+.notif-item { font-size:11px; padding:8px; background:rgba(255,255,255,0.03); border-radius:6px; border-left:3px solid var(--sl-500); }
+.notif-item-time { color:var(--sl-400); font-size:9px; margin-bottom:2px; }
+.notif-footer { padding:12px; border-top:1px solid var(--sl-700); background:rgba(2,6,23,0.5); }
+
 
 </style>
     <style>
         .grid-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
         .control-pad { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-        .btn-dir { background: var(--bl-900); color: var(--bl-300); padding: 16px; border: 1px solid var(--bl-600); border-radius: 8px; text-align: center; cursor: pointer; user-select: none; transition: 0.1s; font-weight: bold; text-transform: uppercase; }
+        .btn-dir { background: var(--bl-900); color: var(--bl-300); padding: 16px; border: 1px solid var(--bl-600); border-radius: 8px; text-align: center; cursor: pointer; -webkit-user-select: none; user-select: none; transition: 0.1s; font-weight: bold; text-transform: uppercase; }
         .btn-dir:active { transform: scale(0.95); background: var(--bl-600); color: white; }
         .btn-stop { background: rgba(239, 68, 68, 0.2); color: var(--rd-400); border: 1px solid var(--rd-500); }
         .btn-stop:active { background: var(--rd-500); color: white; }
@@ -71,93 +155,132 @@ body{margin:0;font-family:'Courier New',Consolas,monospace;background:var(--sl-9
 </head>
 <body>
 
-<header style="border-bottom:1px solid rgba(34,211,238,.3);background:rgba(15,23,42,.8);padding:10px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-    <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:10px;height:10px;background:var(--cy-400);border-radius:50%;box-shadow:0 0 10px var(--cy-400);animation:pulse 2s infinite"></div>
-        <span style="color:var(--cy-400);font-size:18px;font-weight:700;letter-spacing:3px">ROBOT-AUTONOMO-S3</span>
+<header class="app-header">
+    <div class="header-logo-container">
+        <div class="logo-dot"></div>
+        <span class="header-title">ROBOT-AUTONOMO-S3</span>
     </div>
-    <div style="display:flex;align-items:center;gap:16px;font-size:11px">
+    <div class="header-info">
         <span class="data-label">IP:</span><span class="data-value" id="hdr-ip">192.168.4.1</span>
-        <span class="data-label">FSM:</span><span id="fsm-badge" class="fsm-badge" style="border-color:var(--cy-500);color:var(--cy-400);">IDLE</span>
+        
+        <!-- FSM SELECTOR & BADGE -->
+        <div class="fsm-debug-container">
+            <span class="data-label">FSM:</span>
+            <span id="fsm-badge" class="fsm-badge fsm-badge-idle">IDLE</span>
+            <select id="fsm-override-select" class="fsm-select">
+                <option value="INIT">INIT</option>
+                <option value="CALIBRATING">CALIBRATING</option>
+                <option value="IDLE">IDLE</option>
+                <option value="ADVANCING">ADVANCING</option>
+                <option value="TURNING">TURNING</option>
+                <option value="BRAKING">BRAKING</option>
+                <option value="ESTOP">ESTOP</option>
+                <option value="MANUAL">MANUAL</option>
+            </select>
+            <button class="btn-glass-fs fsm-force-btn" onclick="window.app.forceFSM()" title="Forzar Estado FSM">⚙️</button>
+        </div>
+
+        <!-- CRM NOTIFICATIONS BUTTON -->
+        <button class="btn-glass-crm" onclick="window.app.toggleNotifications()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span id="notif-badge" class="notif-badge" style="display:none">0</span>
+        </button>
     </div>
 </header>
 
-<main style="max-width:1600px;margin:20px auto;padding:0 15px;">
+<!-- OFFCANVAS NOTIFICATIONS (Hidden by default) -->
+<div id="notifications-panel" class="notifications-panel" style="display:none">
+    <div class="notif-header">
+        <span>Log de Sistema</span>
+        <button class="btn-glass-fs" onclick="window.app.toggleNotifications()" style="position:static; width:28px; height:28px">✖</button>
+    </div>
+    <div id="notif-list" class="notif-list"></div>
+    <div class="notif-footer">
+        <button class="btn-cmd btn-cmd-go" style="width:100%" onclick="window.app.downloadLogsTXT()">Descargar TXT</button>
+    </div>
+</div>
+
+<main class="main-container">
     <div class="grid-3col">
         
         <!-- COLUMNA 1: CONTROL MANUAL -->
-        <div class="panel-tech" style="padding:20px; display:flex; flex-direction:column; gap:20px;">
-            <div style="color:white; font-size:18px; font-weight:bold; margin-bottom:10px;">Control Manual</div>
+        <div class="panel-tech panel-col">
+            <div class="panel-title">Control Manual</div>
             
             <div class="control-pad">
                 <div></div>
                 <div class="btn-dir" id="btn-fwd">Avanzar</div>
                 <div></div>
-                <div class="btn-dir" id="btn-left" style="background:var(--pu-600); border-color:var(--pu-400); color:white;">Girar</div>
+                <div class="btn-dir btn-dir-turn" id="btn-left">Girar</div>
                 <div class="btn-dir btn-stop" id="btn-stop">Stop</div>
-                <div class="btn-dir" id="btn-right" style="background:var(--pu-600); border-color:var(--pu-400); color:white;">Girar</div>
+                <div class="btn-dir btn-dir-turn" id="btn-right">Girar</div>
                 <div></div>
-                <div class="btn-dir" id="btn-rev" style="background:var(--am-600); border-color:var(--am-400); color:white;">Retroceder</div>
+                <div class="btn-dir btn-dir-rev" id="btn-rev">Retroceder</div>
                 <div></div>
             </div>
 
             <!-- PWM Control Widget Style -->
-            <div style="background:rgba(15,23,42,0.6); padding:16px; border-radius:12px; border:1px solid var(--sl-700);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <span style="color:white; font-weight:bold;">Velocidad PWM</span>
-                    <span id="lbl-pwm-val" style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; color:var(--cy-400);">150</span>
+            <div class="pwm-widget">
+                <div class="pwm-header">
+                    <span class="pwm-title">Velocidad PWM</span>
+                    <span id="lbl-pwm-val" class="pwm-value">150</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:24px; color:var(--ye-400);">⚡</span>
-                    <input type="range" min="0" max="255" value="150" class="slider-tech" id="sl-pwm-gral" oninput="window.ui.setPWM('i',this.value); window.ui.setPWM('d',this.value); document.getElementById('lbl-pwm-val').textContent=this.value;">
+                <div class="pwm-slider-container">
+                    <span class="pwm-icon">⚡</span>
+                    <input type="range" min="0" max="255" value="150" class="slider-tech" id="sl-pwm-gral" title="Velocidad PWM" oninput="window.ui.setPWM('i',this.value); window.ui.setPWM('d',this.value); document.getElementById('lbl-pwm-val').textContent=this.value;">
                 </div>
             </div>
 
-            <div style="margin-top:auto;">
-                <button class="btn-estop" style="width:100%; border-radius:8px;" onclick="window.ui.cmd('estop')">EMERGENCY STOP</button>
+            <div class="estop-container">
+                <button class="btn-estop btn-estop-full" onclick="window.ui.cmd('estop')">EMERGENCY STOP</button>
             </div>
         </div>
 
         <!-- COLUMNA 2: TELEMETRIA -->
-        <div class="panel-tech" style="padding:20px; display:flex; flex-direction:column; gap:20px;">
-            <div style="color:white; font-size:18px; font-weight:bold; margin-bottom:10px;">Telemetría en Vivo</div>
+        <div class="panel-tech panel-col">
+            <div class="panel-title">Telemetría en Vivo</div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="grid-2col-gap16">
                 <div>
-                    <div class="data-label" style="margin-bottom:4px;">DISTANCIA (CM)</div>
+                    <div class="data-label data-label-mb4">DISTANCIA (CM)</div>
                     <div class="huge-number" id="tel-dist">0.0</div>
                 </div>
                 <div>
-                    <div class="data-label" style="margin-bottom:4px;">ANGULO (°)</div>
-                    <div class="huge-number" id="tel-ang" style="color:var(--pu-300);">0.0</div>
+                    <div class="data-label data-label-mb4">ANGULO (°)</div>
+                    <div class="huge-number text-pu-300" id="tel-ang">0.0</div>
                 </div>
             </div>
 
-            <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
-                <div style="display:flex; justify-content:space-between;">
+            <div class="traj-container">
+                <div class="flex-between">
                     <span class="data-label">TRAYECTORIA (X,Y CM)</span>
-                    <span class="data-value" style="font-size:10px;"><span id="tel-posx">0.0</span>, <span id="tel-posy">0.0</span></span>
+                    <span class="data-value data-value-sm"><span id="tel-posx">0.0</span>, <span id="tel-posy">0.0</span></span>
                 </div>
                 <!-- OPTIMIZACION DE CANVAS (Doble capa) -->
-                <div style="position:relative; background:#020617; border:1px solid var(--sl-700); border-radius:8px; height:180px; width:100%;">
-                    <canvas id="canvas-bg" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
-                    <canvas id="canvas-fg" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
+                <div class="canvas-container" id="telemetry-fullscreen-container">
+                    <canvas id="canvas-bg" class="canvas-layer"></canvas>
+                    <canvas id="canvas-fg" class="canvas-layer"></canvas>
+                    <button class="btn-glass-fs" onclick="window.app.toggleFullscreen(document.getElementById('telemetry-fullscreen-container'))" title="Pantalla Completa">⛶</button>
+                    <div class="zoom-controls">
+                        <button class="btn-glass-zoom" onclick="if(window.app && window.app.canvasTrayectoria) window.app.canvasTrayectoria.zoomIn()" title="Zoom In">+</button>
+                        <button class="btn-glass-zoom" onclick="if(window.app && window.app.canvasTrayectoria) window.app.canvasTrayectoria.zoomOut()" title="Zoom Out">-</button>
+                    </div>
                 </div>
             </div>
 
             <div>
                 <span class="data-label">MOTORES (PWM)</span>
-                <div style="display:grid; grid-template-columns: 60px 1fr 40px; align-items:center; gap:10px; margin-top:8px;">
-                    <span style="color:var(--sl-300); font-size:12px;">Izquierdo</span>
-                    <div class="progress-bar-container"><div class="progress-bar-fill" id="bar-pwm-i" style="width:0%;"></div></div>
-                    <span id="lbl-pwm-i" style="font-size:12px; color:var(--cy-400); text-align:right;">0</span>
+                <div class="pwm-bar-row">
+                    <span class="pwm-bar-label">Izquierdo</span>
+                    <div class="progress-bar-container"><div class="progress-bar-fill w-0" id="bar-pwm-i"></div></div>
+                    <span id="lbl-pwm-i" class="pwm-bar-val">0</span>
                 </div>
-                <div style="display:grid; grid-template-columns: 60px 1fr 40px; align-items:center; gap:10px; margin-top:8px;">
-                    <span style="color:var(--sl-300); font-size:12px;">Derecho</span>
-                    <div class="progress-bar-container"><div class="progress-bar-fill" id="bar-pwm-d" style="width:0%;"></div></div>
-                    <span id="lbl-pwm-d" style="font-size:12px; color:var(--cy-400); text-align:right;">0</span>
+                <div class="pwm-bar-row">
+                    <span class="pwm-bar-label">Derecho</span>
+                    <div class="progress-bar-container"><div class="progress-bar-fill w-0" id="bar-pwm-d"></div></div>
+                    <span id="lbl-pwm-d" class="pwm-bar-val">0</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:10px; color:var(--sl-500);">
+                <div class="enc-row">
                     <span>Pulsos L: <span id="enc-i">0</span></span>
                     <span>Pulsos R: <span id="enc-d">0</span></span>
                 </div>
@@ -165,31 +288,38 @@ body{margin:0;font-family:'Courier New',Consolas,monospace;background:var(--sl-9
         </div>
 
         <!-- COLUMNA 3: LABERINTO -->
-        <div class="panel-tech" style="padding:20px; display:flex; flex-direction:column; gap:20px;">
-            <div style="color:white; font-size:18px; font-weight:bold; margin-bottom:10px;">Laberinto X/Y</div>
+        <div class="panel-tech panel-col">
+            <div class="panel-title">Laberinto X/Y</div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="grid-2col-gap16">
                 <div>
-                    <div class="data-label" style="margin-bottom:4px;">DESTINO X (CM)</div>
-                    <input type="number" id="inp-dest-x" value="0" style="width:100%; background:#020617; border:1px solid var(--sl-700); color:white; padding:8px; border-radius:4px; outline:none;">
+                    <div class="data-label data-label-mb4">DESTINO X (CM)</div>
+                    <input type="number" id="inp-dest-x" value="0" title="Destino X" class="input-tech">
                 </div>
                 <div>
-                    <div class="data-label" style="margin-bottom:4px;">DESTINO Y (CM)</div>
-                    <input type="number" id="inp-dest-y" value="0" style="width:100%; background:#020617; border:1px solid var(--sl-700); color:white; padding:8px; border-radius:4px; outline:none;">
+                    <div class="data-label data-label-mb4">DESTINO Y (CM)</div>
+                    <input type="number" id="inp-dest-y" value="0" title="Destino Y" class="input-tech">
                 </div>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <button class="btn-cmd" style="background:var(--pu-600); border-color:var(--pu-400);" onclick="window.app.agregarPuntoXY()">Agregar</button>
-                <button class="btn-cmd" style="background:var(--em-600); border-color:var(--em-400);" onclick="window.app.enviarRutaRobot()">Ir al Destino</button>
+            <div class="grid-2col-gap10">
+                <button class="btn-cmd btn-cmd-add" onclick="window.app.agregarPuntoXY()">Agregar</button>
+                <button class="btn-cmd btn-cmd-go" onclick="window.app.enviarRutaRobot()">Ir al Destino</button>
             </div>
 
-            <div style="flex:1; background:rgba(2,6,23,0.5); border:1px solid var(--sl-700); border-radius:8px; padding:10px; display:flex; flex-direction:column;">
-                <span class="data-label" style="margin-bottom:8px;">WAYPOINTS PROGRAMADOS</span>
-                <div id="waypoints-list" style="flex:1; overflow-y:auto; font-size:12px; color:var(--sl-300);">
-                    <div style="text-align:center; margin-top:20px; opacity:0.5;">Ingrese X,Y destino arriba</div>
+            <div class="waypoints-container">
+                <div class="flex-between data-label-mb8">
+                    <span class="data-label">WAYPOINTS PROGRAMADOS</span>
+                    <div style="display:flex; gap:4px">
+                        <button class="btn-cmd btn-cmd-add" style="padding:2px 8px; font-size:10px" onclick="window.app.exportJSON()">↓ JSON</button>
+                        <button class="btn-cmd btn-cmd-add" style="padding:2px 8px; font-size:10px" onclick="document.getElementById('file-json-import').click()">↑ JSON</button>
+                        <input type="file" id="file-json-import" style="display:none" accept=".json" onchange="window.app.importJSON(event)">
+                    </div>
                 </div>
-                <button class="btn-cmd" style="width:100%; margin-top:10px; background:var(--sl-700);" onclick="window.app.limpiarRuta()">Limpiar</button>
+                <div id="waypoints-list" class="waypoints-list">
+                    <div class="waypoints-empty">Ingrese X,Y destino arriba</div>
+                </div>
+                <button class="btn-cmd btn-cmd-clear" onclick="window.app.limpiarRuta()">Limpiar</button>
             </div>
         </div>
 
@@ -501,14 +631,56 @@ class TrayectoriaCanvas {
         
         this.colaPasos = [];
         this.robotPos = { x: 0, y: 0, angulo: 0 };
-        this.escala = 1.2; // 1.2 px/cm
+        this.escala = 1.2; // pixels per cm
+        this.offsetX = 0;
+        this.offsetY = 0;
         
         this._lastTouch = 0;
+        this.isDragging = false;
+        this.dragStartX = 0;
+        this.dragStartY = 0;
+        
         this.resize();
         window.addEventListener('resize', () => this.resize());
         
         // Eventos solo en el FG
         this.canvasFg.addEventListener('mousedown', (e) => {
+            if(Date.now() - this._lastTouch < 300) return;
+            this.isDragging = true;
+            this.dragStartX = e.clientX;
+            this.dragStartY = e.clientY;
+        });
+        this.canvasFg.addEventListener('mousemove', (e) => {
+            if (this.isDragging) {
+                this.offsetX += e.clientX - this.dragStartX;
+                this.offsetY += e.clientY - this.dragStartY;
+                this.dragStartX = e.clientX;
+                this.dragStartY = e.clientY;
+                this.drawBackground();
+                this.drawForeground();
+            }
+        });
+        this.canvasFg.addEventListener('mouseup', (e) => {
+            if(this.isDragging) {
+                this.isDragging = false;
+                // Si el movimiento fue minimo, tratarlo como click (add waypoint)
+                const dist = Math.hypot(e.clientX - this.dragStartX, e.clientY - this.dragStartY);
+                if(dist < 5) {
+                    this.click(e);
+                }
+            }
+        });
+        this.canvasFg.addEventListener('mouseleave', () => this.isDragging = false);
+
+        this.canvasFg.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = 1.1;
+            if (e.deltaY < 0) {
+                this.zoomIn();
+            } else {
+                this.zoomOut();
+            }
+        });
             if(Date.now() - this._lastTouch < 300) return;
             this.click(e);
         });
@@ -516,6 +688,20 @@ class TrayectoriaCanvas {
             this._lastTouch = Date.now();
             this.click(e);
         }, {passive: true});
+    }
+
+    zoomIn() {
+        this.escala *= 1.2;
+        if(this.escala > 10) this.escala = 10;
+        this.drawBackground();
+        this.drawForeground();
+    }
+    
+    zoomOut() {
+        this.escala /= 1.2;
+        if(this.escala < 0.1) this.escala = 0.1;
+        this.drawBackground();
+        this.drawForeground();
     }
     
     resize() {
@@ -537,8 +723,8 @@ class TrayectoriaCanvas {
         const clickX = touch.clientX - rect.left;
         const clickY = touch.clientY - rect.top;
         
-        const centroX = this.canvasFg.width / 2;
-        const centroY = this.canvasFg.height / 2;
+        const centroX = (this.canvasFg.width / 2) + this.offsetX;
+        const centroY = (this.canvasFg.height / 2) + this.offsetY;
         
         const rx = (clickX - centroX) / this.escala;
         const ry = (centroY - clickY) / this.escala;
@@ -565,6 +751,10 @@ class TrayectoriaCanvas {
         this.robotPos.y = y;
         this.robotPos.angulo = angulo;
         this.drawForeground();
+        // Disparar re-renderizado de wp para actualizar dist/ang relativos
+        if(window.app && window.app.onWaypointAdded) {
+            window.app.onWaypointAdded();
+        }
     }
     
     drawBackground() {
@@ -575,25 +765,63 @@ class TrayectoriaCanvas {
         ctx.fillStyle = '#020617';
         ctx.fillRect(0, 0, w, h);
         
-        // Rejilla de Fondo
+        const centroX = (w / 2) + this.offsetX;
+        const centroY = (h / 2) + this.offsetY;
+        
+        // Rejilla de Fondo adaptativa a escala (cada 20cm logicos)
         ctx.strokeStyle = 'rgba(34, 211, 238, 0.06)';
         ctx.lineWidth = 0.5;
-        const gridSize = 20;
-        for (let x = 0; x < w; x += gridSize) {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-        }
-        for (let y = 0; y < h; y += gridSize) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-        }
+        const logicalGridSize = 20; // 20 cm
+        const pxGridSize = logicalGridSize * this.escala;
         
-        const centroX = w / 2;
-        const centroY = h / 2;
+        ctx.beginPath();
+        // Lineas verticales
+        for (let x = centroX % pxGridSize; x < w; x += pxGridSize) {
+            ctx.moveTo(x, 0); ctx.lineTo(x, h);
+        }
+        // Lineas horizontales
+        for (let y = centroY % pxGridSize; y < h; y += pxGridSize) {
+            ctx.moveTo(0, y); ctx.lineTo(w, y);
+        }
+        ctx.stroke();
         
-        // Ejes origen
-        ctx.strokeStyle = 'rgba(34, 211, 238, 0.15)';
+        // Ejes X e Y principales
+        ctx.strokeStyle = 'rgba(34, 211, 238, 0.25)';
         ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(centroX - 10, centroY); ctx.lineTo(centroX + 10, centroY); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(centroX, centroY - 10); ctx.lineTo(centroX, centroY + 10); ctx.stroke();
+        ctx.beginPath();
+        // Eje X
+        ctx.moveTo(0, centroY); ctx.lineTo(w, centroY);
+        // Eje Y
+        ctx.moveTo(centroX, 0); ctx.lineTo(centroX, h);
+        ctx.stroke();
+
+        // Numeracion en ejes
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.7)'; // sl-400
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        
+        // Marcadores Eje X
+        let startXLogical = Math.ceil(-centroX / pxGridSize) * logicalGridSize;
+        for (let xLog = startXLogical; xLog * this.escala + centroX < w; xLog += logicalGridSize) {
+            if (xLog !== 0) {
+                const px = xLog * this.escala + centroX;
+                ctx.fillText(xLog, px, centroY + 4);
+                ctx.beginPath(); ctx.moveTo(px, centroY - 3); ctx.lineTo(px, centroY + 3); ctx.stroke();
+            }
+        }
+        
+        // Marcadores Eje Y
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        let startYLogical = Math.ceil((centroY - h) / pxGridSize) * logicalGridSize;
+        for (let yLog = startYLogical; centroY - yLog * this.escala < h; yLog += logicalGridSize) {
+            if (yLog !== 0) {
+                const py = centroY - yLog * this.escala;
+                ctx.fillText(yLog, centroX - 4, py);
+                ctx.beginPath(); ctx.moveTo(centroX - 3, py); ctx.lineTo(centroX + 3, py); ctx.stroke();
+            }
+        }
     }
     
     drawForeground() {
@@ -604,8 +832,8 @@ class TrayectoriaCanvas {
         // Limpiar FG
         ctx.clearRect(0, 0, w, h);
         
-        const centroX = w / 2;
-        const centroY = h / 2;
+        const centroX = (w / 2) + this.offsetX;
+        const centroY = (h / 2) + this.offsetY;
         
         // Dibujar ruta planificada
         if (this.colaPasos.length > 0) {
@@ -674,6 +902,8 @@ window.TrayectoriaCanvas = TrayectoriaCanvas;
 window.app = {
     canvasTrayectoria: null,
     ws: null,
+    notifLogs: [],
+    unreadNotifs: 0,
 
     limpiarRuta() {
         if(this.canvasTrayectoria) this.canvasTrayectoria.limpiar();
@@ -691,14 +921,30 @@ window.app = {
     onWaypointAdded() {
         const list = document.getElementById('waypoints-list');
         if(!this.canvasTrayectoria) return;
-        const pts = this.canvasTrayectoria.colaPasos;
-        if(pts.length === 1) list.innerHTML = ''; // clean placeholder
-        const p = pts[pts.length - 1];
-        const div = document.createElement('div');
-        div.style.padding = '4px 0';
-        div.style.borderBottom = '1px solid var(--sl-700)';
-        div.textContent = `WP ${pts.length}: X=${p.x.toFixed(1)} cm, Y=${p.y.toFixed(1)} cm`;
-        list.appendChild(div);
+        list.innerHTML = '';
+        this.canvasTrayectoria.colaPasos.forEach((p, index) => {
+            // Calcular vector y ángulo respecto al robot actual
+            const dx = p.x - this.canvasTrayectoria.robotPos.x;
+            const dy = p.y - this.canvasTrayectoria.robotPos.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const angRad = Math.atan2(dy, dx);
+            let angDeg = angRad * 180 / Math.PI;
+            if(angDeg < 0) angDeg += 360;
+
+            const div = document.createElement('div');
+            div.className = 'wp-item';
+            div.innerHTML = `
+                <div class="wp-item-header">
+                    <span>WP ${index + 1}</span>
+                    <span>Dest: X=${p.x.toFixed(1)}, Y=${p.y.toFixed(1)}</span>
+                </div>
+                <div class="wp-item-details">
+                    <span><span style="color:var(--cy-400)">Δd:</span> ${dist.toFixed(1)} cm</span>
+                    <span><span style="color:var(--ye-400)">θ:</span> ${angDeg.toFixed(1)}°</span>
+                </div>
+            `;
+            list.appendChild(div);
+        });
     },
 
     enviarRutaRobot() {
@@ -708,6 +954,134 @@ window.app = {
             this.ws.send(payload);
             this.limpiarRuta();
         }
+    },
+
+    toggleFullscreen(elem) {
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+        // Force resize del canvas poco despues de la transicion de fullscreen
+        setTimeout(() => { if(this.canvasTrayectoria) this.canvasTrayectoria.resize(); }, 100);
+        setTimeout(() => { if(this.canvasTrayectoria) this.canvasTrayectoria.resize(); }, 500);
+    },
+
+    // --- CRM NOTIFICACIONES ---
+    addNotification(msg, type="info") {
+        const timeStr = new Date().toLocaleTimeString();
+        this.notifLogs.push(`[${timeStr}] [${type.toUpperCase()}] ${msg}`);
+        
+        const list = document.getElementById('notif-list');
+        const div = document.createElement('div');
+        div.className = 'notif-item';
+        let borderColor = 'var(--sl-500)';
+        if(type === 'error' || type === 'estop') borderColor = 'var(--re-500)';
+        else if(type === 'warn') borderColor = 'var(--ye-500)';
+        div.style.borderLeftColor = borderColor;
+        div.innerHTML = `<div class="notif-item-time">${timeStr}</div><div>${msg}</div>`;
+        list.prepend(div);
+        
+        if (this.notifLogs.length > 100) {
+            this.notifLogs.shift(); // Evitar leak de RAM array JS
+            if (list.lastChild) {
+                list.removeChild(list.lastChild); // Evitar leak de nodos DOM
+            }
+        }
+        
+        this.unreadNotifs++;
+        const badge = document.getElementById('notif-badge');
+        badge.textContent = this.unreadNotifs;
+        badge.style.display = 'block';
+    },
+
+    toggleNotifications() {
+        const panel = document.getElementById('notifications-panel');
+        if (panel.style.display === 'none') {
+            panel.style.display = 'flex';
+            this.unreadNotifs = 0;
+            document.getElementById('notif-badge').style.display = 'none';
+        } else {
+            panel.style.display = 'none';
+        }
+    },
+
+    downloadLogsTXT() {
+        if(this.notifLogs.length === 0) return;
+        const text = this.notifLogs.join('\n');
+        const blob = new Blob([text], {type: "text/plain"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `robot_log_${new Date().getTime()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+
+    // --- FSM DEBUG ---
+    forceFSM() {
+        const select = document.getElementById('fsm-override-select');
+        const estado = select.value;
+        if(this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(`FSM:${estado}`);
+            this.addNotification(`Forzando estado FSM: ${estado}`, "warn");
+        }
+    },
+
+    // --- LABERINTO JSON I/O ---
+    exportJSON() {
+        if(!this.canvasTrayectoria || this.canvasTrayectoria.colaPasos.length === 0) {
+            this.addNotification("No hay waypoints para exportar", "warn");
+            return;
+        }
+        const data = JSON.stringify(this.canvasTrayectoria.colaPasos, null, 2);
+        const blob = new Blob([data], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `waypoints_${new Date().getTime()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.addNotification("Waypoints exportados a JSON");
+    },
+
+    importJSON(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if(Array.isArray(parsed)) {
+                    if(this.canvasTrayectoria) {
+                        this.canvasTrayectoria.colaPasos = parsed;
+                        this.canvasTrayectoria.drawForeground();
+                        this.onWaypointAdded();
+                        this.addNotification(`Importados ${parsed.length} waypoints`, "info");
+                    }
+                }
+            } catch (err) {
+                this.addNotification("Error parseando JSON", "error");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Reset input
     },
 
     sendCmd(dir) {

@@ -29,9 +29,43 @@
     </div>
     <div class="header-info">
         <span class="data-label">IP:</span><span class="data-value" id="hdr-ip">192.168.4.1</span>
-        <span class="data-label">FSM:</span><span id="fsm-badge" class="fsm-badge fsm-badge-idle">IDLE</span>
+        
+        <!-- FSM SELECTOR & BADGE -->
+        <div class="fsm-debug-container">
+            <span class="data-label">FSM:</span>
+            <span id="fsm-badge" class="fsm-badge fsm-badge-idle">IDLE</span>
+            <select id="fsm-override-select" class="fsm-select">
+                <option value="INIT">INIT</option>
+                <option value="CALIBRATING">CALIBRATING</option>
+                <option value="IDLE">IDLE</option>
+                <option value="ADVANCING">ADVANCING</option>
+                <option value="TURNING">TURNING</option>
+                <option value="BRAKING">BRAKING</option>
+                <option value="ESTOP">ESTOP</option>
+                <option value="MANUAL">MANUAL</option>
+            </select>
+            <button class="btn-glass-fs fsm-force-btn" onclick="window.app.forceFSM()" title="Forzar Estado FSM">⚙️</button>
+        </div>
+
+        <!-- CRM NOTIFICATIONS BUTTON -->
+        <button class="btn-glass-crm" onclick="window.app.toggleNotifications()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span id="notif-badge" class="notif-badge" style="display:none">0</span>
+        </button>
     </div>
 </header>
+
+<!-- OFFCANVAS NOTIFICATIONS (Hidden by default) -->
+<div id="notifications-panel" class="notifications-panel" style="display:none">
+    <div class="notif-header">
+        <span>Log de Sistema</span>
+        <button class="btn-glass-fs" onclick="window.app.toggleNotifications()" style="position:static; width:28px; height:28px">✖</button>
+    </div>
+    <div id="notif-list" class="notif-list"></div>
+    <div class="notif-footer">
+        <button class="btn-cmd btn-cmd-go" style="width:100%" onclick="window.app.downloadLogsTXT()">Descargar TXT</button>
+    </div>
+</div>
 
 <main class="main-container">
     <div class="grid-3col">
@@ -90,9 +124,14 @@
                     <span class="data-value data-value-sm"><span id="tel-posx">0.0</span>, <span id="tel-posy">0.0</span></span>
                 </div>
                 <!-- OPTIMIZACION DE CANVAS (Doble capa) -->
-                <div class="canvas-container">
+                <div class="canvas-container" id="telemetry-fullscreen-container">
                     <canvas id="canvas-bg" class="canvas-layer"></canvas>
                     <canvas id="canvas-fg" class="canvas-layer"></canvas>
+                    <button class="btn-glass-fs" onclick="window.app.toggleFullscreen(document.getElementById('telemetry-fullscreen-container'))" title="Pantalla Completa">⛶</button>
+                    <div class="zoom-controls">
+                        <button class="btn-glass-zoom" onclick="if(window.app && window.app.canvasTrayectoria) window.app.canvasTrayectoria.zoomIn()" title="Zoom In">+</button>
+                        <button class="btn-glass-zoom" onclick="if(window.app && window.app.canvasTrayectoria) window.app.canvasTrayectoria.zoomOut()" title="Zoom Out">-</button>
+                    </div>
                 </div>
             </div>
 
@@ -136,7 +175,14 @@
             </div>
 
             <div class="waypoints-container">
-                <span class="data-label data-label-mb8">WAYPOINTS PROGRAMADOS</span>
+                <div class="flex-between data-label-mb8">
+                    <span class="data-label">WAYPOINTS PROGRAMADOS</span>
+                    <div style="display:flex; gap:4px">
+                        <button class="btn-cmd btn-cmd-add" style="padding:2px 8px; font-size:10px" onclick="window.app.exportJSON()">↓ JSON</button>
+                        <button class="btn-cmd btn-cmd-add" style="padding:2px 8px; font-size:10px" onclick="document.getElementById('file-json-import').click()">↑ JSON</button>
+                        <input type="file" id="file-json-import" style="display:none" accept=".json" onchange="window.app.importJSON(event)">
+                    </div>
+                </div>
                 <div id="waypoints-list" class="waypoints-list">
                     <div class="waypoints-empty">Ingrese X,Y destino arriba</div>
                 </div>

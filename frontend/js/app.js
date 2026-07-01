@@ -1,6 +1,8 @@
 window.app = {
     canvasTrayectoria: null,
     ws: null,
+    notifLogs: [],
+    unreadNotifs: 0,
 
     limpiarRuta() {
         if(this.canvasTrayectoria) this.canvasTrayectoria.limpiar();
@@ -18,14 +20,30 @@ window.app = {
     onWaypointAdded() {
         const list = document.getElementById('waypoints-list');
         if(!this.canvasTrayectoria) return;
-        const pts = this.canvasTrayectoria.colaPasos;
-        if(pts.length === 1) list.innerHTML = ''; // clean placeholder
-        const p = pts[pts.length - 1];
-        const div = document.createElement('div');
-        div.style.padding = '4px 0';
-        div.style.borderBottom = '1px solid var(--sl-700)';
-        div.textContent = `WP ${pts.length}: X=${p.x.toFixed(1)} cm, Y=${p.y.toFixed(1)} cm`;
-        list.appendChild(div);
+        list.innerHTML = '';
+        this.canvasTrayectoria.colaPasos.forEach((p, index) => {
+            // Calcular vector y ángulo respecto al robot actual
+            const dx = p.x - this.canvasTrayectoria.robotPos.x;
+            const dy = p.y - this.canvasTrayectoria.robotPos.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const angRad = Math.atan2(dy, dx);
+            let angDeg = angRad * 180 / Math.PI;
+            if(angDeg < 0) angDeg += 360;
+
+            const div = document.createElement('div');
+            div.className = 'wp-item';
+            div.innerHTML = `
+                <div class="wp-item-header">
+                    <span>WP ${index + 1}</span>
+                    <span>Dest: X=${p.x.toFixed(1)}, Y=${p.y.toFixed(1)}</span>
+                </div>
+                <div class="wp-item-details">
+                    <span><span style="color:var(--cy-400)">Δd:</span> ${dist.toFixed(1)} cm</span>
+                    <span><span style="color:var(--ye-400)">θ:</span> ${angDeg.toFixed(1)}°</span>
+                </div>
+            `;
+            list.appendChild(div);
+        });
     },
 
     enviarRutaRobot() {
@@ -35,6 +53,134 @@ window.app = {
             this.ws.send(payload);
             this.limpiarRuta();
         }
+    },
+
+    toggleFullscreen(elem) {
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+        // Force resize del canvas poco despues de la transicion de fullscreen
+        setTimeout(() => { if(this.canvasTrayectoria) this.canvasTrayectoria.resize(); }, 100);
+        setTimeout(() => { if(this.canvasTrayectoria) this.canvasTrayectoria.resize(); }, 500);
+    },
+
+    // --- CRM NOTIFICACIONES ---
+    addNotification(msg, type="info") {
+        const timeStr = new Date().toLocaleTimeString();
+        this.notifLogs.push(`[${timeStr}] [${type.toUpperCase()}] ${msg}`);
+        
+        const list = document.getElementById('notif-list');
+        const div = document.createElement('div');
+        div.className = 'notif-item';
+        let borderColor = 'var(--sl-500)';
+        if(type === 'error' || type === 'estop') borderColor = 'var(--re-500)';
+        else if(type === 'warn') borderColor = 'var(--ye-500)';
+        div.style.borderLeftColor = borderColor;
+        div.innerHTML = `<div class="notif-item-time">${timeStr}</div><div>${msg}</div>`;
+        list.prepend(div);
+        
+        if (this.notifLogs.length > 100) {
+            this.notifLogs.shift(); // Evitar leak de RAM array JS
+            if (list.lastChild) {
+                list.removeChild(list.lastChild); // Evitar leak de nodos DOM
+            }
+        }
+        
+        this.unreadNotifs++;
+        const badge = document.getElementById('notif-badge');
+        badge.textContent = this.unreadNotifs;
+        badge.style.display = 'block';
+    },
+
+    toggleNotifications() {
+        const panel = document.getElementById('notifications-panel');
+        if (panel.style.display === 'none') {
+            panel.style.display = 'flex';
+            this.unreadNotifs = 0;
+            document.getElementById('notif-badge').style.display = 'none';
+        } else {
+            panel.style.display = 'none';
+        }
+    },
+
+    downloadLogsTXT() {
+        if(this.notifLogs.length === 0) return;
+        const text = this.notifLogs.join('\n');
+        const blob = new Blob([text], {type: "text/plain"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `robot_log_${new Date().getTime()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+
+    // --- FSM DEBUG ---
+    forceFSM() {
+        const select = document.getElementById('fsm-override-select');
+        const estado = select.value;
+        if(this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(`FSM:${estado}`);
+            this.addNotification(`Forzando estado FSM: ${estado}`, "warn");
+        }
+    },
+
+    // --- LABERINTO JSON I/O ---
+    exportJSON() {
+        if(!this.canvasTrayectoria || this.canvasTrayectoria.colaPasos.length === 0) {
+            this.addNotification("No hay waypoints para exportar", "warn");
+            return;
+        }
+        const data = JSON.stringify(this.canvasTrayectoria.colaPasos, null, 2);
+        const blob = new Blob([data], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `waypoints_${new Date().getTime()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.addNotification("Waypoints exportados a JSON");
+    },
+
+    importJSON(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if(Array.isArray(parsed)) {
+                    if(this.canvasTrayectoria) {
+                        this.canvasTrayectoria.colaPasos = parsed;
+                        this.canvasTrayectoria.drawForeground();
+                        this.onWaypointAdded();
+                        this.addNotification(`Importados ${parsed.length} waypoints`, "info");
+                    }
+                }
+            } catch (err) {
+                this.addNotification("Error parseando JSON", "error");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Reset input
     },
 
     sendCmd(dir) {

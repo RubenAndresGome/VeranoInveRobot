@@ -114,6 +114,27 @@
       "action": "design",
       "summary": "PDCA 015: Agentes Filosoficos — Supervisor Ampliado + Ockham Razor",
       "files_affected": []
+    },
+    {
+      "id": "ses-pdca_016",
+      "timestamp": "2026-06-28T00:00:00",
+      "action": "refactor",
+      "summary": "PDCA 016: Instalacion Completa de Infraestructura MDE",
+      "files_affected": []
+    },
+    {
+      "id": "ses-pdca_017",
+      "timestamp": "2026-07-01T00:00:00",
+      "action": "refactor+design",
+      "summary": "PDCA 017: UI Mejoras - Debug FSM, Notificaciones CRM e I/O JSON",
+      "files_affected": ["index.html", "styles.css", "app.js", "web_server.cpp", "web_server.h", "main.cpp"]
+    },
+    {
+      "id": "ses-pdca_018",
+      "timestamp": "2026-07-01T00:00:00",
+      "action": "audit+refactor",
+      "summary": "PDCA 018: Auditoria de Bugs (Memory Leak UI, Race Conditions FSM) y Areas de Mejora",
+      "files_affected": ["app.js", "web_server.cpp", "web_server.h", "main.cpp"]
     }
   ],
   "cross_references": {
@@ -130,12 +151,15 @@
     "PDCA_012": "PDCA_012_BugReport_Analisis.md",
     "PDCA_013": "PDCA_013_Fix_Auditoria_Bugs.md",
     "PDCA_014": "PDCA_014_GitHub_Prep.md",
-    "PDCA_015": "PDCA_015_Agentes_Filosoficos.md"
+    "PDCA_015": "PDCA_015_Agentes_Filosoficos.md",
+    "PDCA_016": "PDCA_016_MDE_Setup.md",
+    "PDCA_017": "PDCA_017_UI_Mejoras_Debug_IO.md",
+    "PDCA_018": "PDCA_018_Auditoria_Bugs_Mejoras.md"
   },
-  "pdca_counter": 15,
+  "pdca_counter": 18,
   "always_save": true,
   "metrics": {
-    "total_sessions": 15,
+    "total_sessions": 18,
     "total_agents": 41,
     "total_tests": 0,
     "active_groups": 26,

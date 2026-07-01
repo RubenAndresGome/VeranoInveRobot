@@ -8,14 +8,56 @@ class TrayectoriaCanvas {
         
         this.colaPasos = [];
         this.robotPos = { x: 0, y: 0, angulo: 0 };
-        this.escala = 1.2; // 1.2 px/cm
+        this.escala = 1.2; // pixels per cm
+        this.offsetX = 0;
+        this.offsetY = 0;
         
         this._lastTouch = 0;
+        this.isDragging = false;
+        this.dragStartX = 0;
+        this.dragStartY = 0;
+        
         this.resize();
         window.addEventListener('resize', () => this.resize());
         
         // Eventos solo en el FG
         this.canvasFg.addEventListener('mousedown', (e) => {
+            if(Date.now() - this._lastTouch < 300) return;
+            this.isDragging = true;
+            this.dragStartX = e.clientX;
+            this.dragStartY = e.clientY;
+        });
+        this.canvasFg.addEventListener('mousemove', (e) => {
+            if (this.isDragging) {
+                this.offsetX += e.clientX - this.dragStartX;
+                this.offsetY += e.clientY - this.dragStartY;
+                this.dragStartX = e.clientX;
+                this.dragStartY = e.clientY;
+                this.drawBackground();
+                this.drawForeground();
+            }
+        });
+        this.canvasFg.addEventListener('mouseup', (e) => {
+            if(this.isDragging) {
+                this.isDragging = false;
+                // Si el movimiento fue minimo, tratarlo como click (add waypoint)
+                const dist = Math.hypot(e.clientX - this.dragStartX, e.clientY - this.dragStartY);
+                if(dist < 5) {
+                    this.click(e);
+                }
+            }
+        });
+        this.canvasFg.addEventListener('mouseleave', () => this.isDragging = false);
+
+        this.canvasFg.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = 1.1;
+            if (e.deltaY < 0) {
+                this.zoomIn();
+            } else {
+                this.zoomOut();
+            }
+        });
             if(Date.now() - this._lastTouch < 300) return;
             this.click(e);
         });
@@ -23,6 +65,20 @@ class TrayectoriaCanvas {
             this._lastTouch = Date.now();
             this.click(e);
         }, {passive: true});
+    }
+
+    zoomIn() {
+        this.escala *= 1.2;
+        if(this.escala > 10) this.escala = 10;
+        this.drawBackground();
+        this.drawForeground();
+    }
+    
+    zoomOut() {
+        this.escala /= 1.2;
+        if(this.escala < 0.1) this.escala = 0.1;
+        this.drawBackground();
+        this.drawForeground();
     }
     
     resize() {
@@ -44,8 +100,8 @@ class TrayectoriaCanvas {
         const clickX = touch.clientX - rect.left;
         const clickY = touch.clientY - rect.top;
         
-        const centroX = this.canvasFg.width / 2;
-        const centroY = this.canvasFg.height / 2;
+        const centroX = (this.canvasFg.width / 2) + this.offsetX;
+        const centroY = (this.canvasFg.height / 2) + this.offsetY;
         
         const rx = (clickX - centroX) / this.escala;
         const ry = (centroY - clickY) / this.escala;
@@ -72,6 +128,10 @@ class TrayectoriaCanvas {
         this.robotPos.y = y;
         this.robotPos.angulo = angulo;
         this.drawForeground();
+        // Disparar re-renderizado de wp para actualizar dist/ang relativos
+        if(window.app && window.app.onWaypointAdded) {
+            window.app.onWaypointAdded();
+        }
     }
     
     drawBackground() {
@@ -82,25 +142,63 @@ class TrayectoriaCanvas {
         ctx.fillStyle = '#020617';
         ctx.fillRect(0, 0, w, h);
         
-        // Rejilla de Fondo
+        const centroX = (w / 2) + this.offsetX;
+        const centroY = (h / 2) + this.offsetY;
+        
+        // Rejilla de Fondo adaptativa a escala (cada 20cm logicos)
         ctx.strokeStyle = 'rgba(34, 211, 238, 0.06)';
         ctx.lineWidth = 0.5;
-        const gridSize = 20;
-        for (let x = 0; x < w; x += gridSize) {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-        }
-        for (let y = 0; y < h; y += gridSize) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-        }
+        const logicalGridSize = 20; // 20 cm
+        const pxGridSize = logicalGridSize * this.escala;
         
-        const centroX = w / 2;
-        const centroY = h / 2;
+        ctx.beginPath();
+        // Lineas verticales
+        for (let x = centroX % pxGridSize; x < w; x += pxGridSize) {
+            ctx.moveTo(x, 0); ctx.lineTo(x, h);
+        }
+        // Lineas horizontales
+        for (let y = centroY % pxGridSize; y < h; y += pxGridSize) {
+            ctx.moveTo(0, y); ctx.lineTo(w, y);
+        }
+        ctx.stroke();
         
-        // Ejes origen
-        ctx.strokeStyle = 'rgba(34, 211, 238, 0.15)';
+        // Ejes X e Y principales
+        ctx.strokeStyle = 'rgba(34, 211, 238, 0.25)';
         ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(centroX - 10, centroY); ctx.lineTo(centroX + 10, centroY); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(centroX, centroY - 10); ctx.lineTo(centroX, centroY + 10); ctx.stroke();
+        ctx.beginPath();
+        // Eje X
+        ctx.moveTo(0, centroY); ctx.lineTo(w, centroY);
+        // Eje Y
+        ctx.moveTo(centroX, 0); ctx.lineTo(centroX, h);
+        ctx.stroke();
+
+        // Numeracion en ejes
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.7)'; // sl-400
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        
+        // Marcadores Eje X
+        let startXLogical = Math.ceil(-centroX / pxGridSize) * logicalGridSize;
+        for (let xLog = startXLogical; xLog * this.escala + centroX < w; xLog += logicalGridSize) {
+            if (xLog !== 0) {
+                const px = xLog * this.escala + centroX;
+                ctx.fillText(xLog, px, centroY + 4);
+                ctx.beginPath(); ctx.moveTo(px, centroY - 3); ctx.lineTo(px, centroY + 3); ctx.stroke();
+            }
+        }
+        
+        // Marcadores Eje Y
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        let startYLogical = Math.ceil((centroY - h) / pxGridSize) * logicalGridSize;
+        for (let yLog = startYLogical; centroY - yLog * this.escala < h; yLog += logicalGridSize) {
+            if (yLog !== 0) {
+                const py = centroY - yLog * this.escala;
+                ctx.fillText(yLog, centroX - 4, py);
+                ctx.beginPath(); ctx.moveTo(centroX - 3, py); ctx.lineTo(centroX + 3, py); ctx.stroke();
+            }
+        }
     }
     
     drawForeground() {
@@ -111,8 +209,8 @@ class TrayectoriaCanvas {
         // Limpiar FG
         ctx.clearRect(0, 0, w, h);
         
-        const centroX = w / 2;
-        const centroY = h / 2;
+        const centroX = (w / 2) + this.offsetX;
+        const centroY = (h / 2) + this.offsetY;
         
         // Dibujar ruta planificada
         if (this.colaPasos.length > 0) {
