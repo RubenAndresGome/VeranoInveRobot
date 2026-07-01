@@ -155,7 +155,7 @@ R               Reset
                     │
              ┌──────▼──────┐
              │   ESP32-S3  │
-             │  FSM (7 est)│
+             │  FSM (8 est)│
              │  PID + Odometria
              │  WiFi AP    │
              │  HTTP/WS :80│
@@ -173,7 +173,7 @@ R               Reset
        └─────────┘    └─────────┘
 ```
 
-La FSM tiene 7 estados: INIT → CALIBRATING → IDLE → ADVANCING/TURNING/MANUAL → BRAKING → ESTOP. Cada tick de loop es un fragmento de trabajo no-bloqueante (< 5ms).
+La FSM tiene 8 estados: INIT → CALIBRATING → IDLE → ADVANCING/TURNING/MANUAL → BRAKING → ESTOP. Cada tick de loop es un fragmento de trabajo no-bloqueante (< 5ms).
 
 ## Documentacion
 
@@ -225,4 +225,4 @@ Supervisor (no-contradiccion, 5S)
         → Build (pio run)
 ```
 
-Historial completo de auditorias en `.mde_history/` (16 sesiones PDCA, 66 hallazgos, 39 corregidos).
+Historial completo de auditorias en `.mde_history/` (19 sesiones PDCA, 108 hallazgos totales en ultima auditoria).

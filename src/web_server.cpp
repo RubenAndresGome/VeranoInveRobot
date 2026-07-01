@@ -236,12 +236,12 @@ static void handle_ruta(AsyncWebServerRequest *request) {
             int vel = 150;
             
             PuntoRuta cmd;
-            if (abs(dist) > 0) {
+            if (fabsf(dist) > 0) {
                 cmd.distancia = dist;
                 cmd.angulo = 0;
                 cmd.velocidad = vel;
-                cmd.duracion = (unsigned long)(abs(dist) / 5.0f * 1000) + 2000;
-            } else if (abs(ang) > 0) {
+                cmd.duracion = (unsigned long)(fabsf(dist) / 5.0f * 1000) + 2000;
+            } else if (fabsf(ang) > 0) {
                 cmd.distancia = 0;
                 cmd.angulo = ang;
                 cmd.velocidad = vel;
@@ -306,7 +306,7 @@ static void handle_api(AsyncWebServerRequest *request) {
                 cmd.distancia = dist;
                 cmd.angulo = 0;
                 cmd.velocidad = vel;
-                cmd.duracion = (unsigned long)(abs(dist) / 5.0f * 1000) + 2000;
+                cmd.duracion = (unsigned long)(fabsf(dist) / 5.0f * 1000) + 2000;
                 if (web_server_enqueue_command(cmd)) encolados++;
             } else if (accion == "girar") {
                 float ang = paso["angulo"] | 0.0f;
@@ -421,7 +421,7 @@ static void handle_raw(AsyncWebServerRequest *request) {
         if (coma > 1) {
             float ang = raw.substring(1, coma).toFloat();
             int vel = raw.substring(coma + 1).toInt();
-            if (abs(ang) > 0 && abs(ang) <= 360 && vel >= 50 && vel <= 255) {
+            if (fabsf(ang) > 0 && fabsf(ang) <= 360 && vel >= 50 && vel <= 255) {
                 prepararComandoGiro(ang, vel);
                 request->send(200, "text/plain", "OK");
                 return;
@@ -448,7 +448,12 @@ static void handle_raw(AsyncWebServerRequest *request) {
     }
     
     if (tipo == 'R' || tipo == 'r') {
-        request->send(200, "text/plain", "RESET");
+        wsResetRequested = true;
+        portENTER_CRITICAL(&muxComandos);
+        colaHead = 0; colaTail = 0; colaCount = 0;
+        portEXIT_CRITICAL(&muxComandos);
+        Serial.println("[RAW] RESET: cola limpiada, reset solicitado");
+        request->send(200, "text/plain", "RESET OK");
         return;
     }
     
@@ -489,8 +494,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             else if (strcmp(msg, "RESET") == 0) {
                 portENTER_CRITICAL(&muxComandos);
                 colaHead = 0; colaTail = 0; colaCount = 0;
-                portEXIT_CRITICAL(&muxComandos);
                 wsResetRequested = true;
+                portEXIT_CRITICAL(&muxComandos);
                 Serial.println("[WS] RESET: cola limpiada, reset solicitado");
             }
             else if (strncmp(msg, "MV:", 3) == 0) {
@@ -508,9 +513,11 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             }
             else if (strncmp(msg, "RUTA:", 5) == 0) {
                 // Convertir ruta absoluta a comandos de avance y giro en cola circular
+                portENTER_CRITICAL(&muxTelWeb);
                 float X_prev = tel_posX;
                 float Y_prev = tel_posY;
                 float Heading_prev = tel_orientacion; // Radianes
+                portEXIT_CRITICAL(&muxTelWeb);
                 
                 // Vaciar cola de comandos previa de forma segura
                 portENTER_CRITICAL(&muxComandos);
@@ -543,7 +550,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
                             while (diff_ang < -180.0f) diff_ang += 360.0f;
                             
                             // Si hay diferencia angular, encolar giro
-                            if (abs(diff_ang) > 1.0f) {
+                            if (fabsf(diff_ang) > 1.0f) {
                                 PuntoRuta cmdGiro;
                                 cmdGiro.distancia = 0;
                                 cmdGiro.angulo = diff_ang;

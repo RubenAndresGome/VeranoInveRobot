@@ -42,7 +42,7 @@
 
 | Modulo | Archivo | Funcion |
 |--------|---------|---------|
-| **FSM** | `main.cpp` | Maquina de estados de 7 estados, non-blocking |
+| **FSM** | `main.cpp` | Maquina de estados de 8 estados, non-blocking |
 | **HAL** | `hal_pins.cpp/h` | Abstraccion de pines GPIO (migrable a otros MCU) |
 | **Web** | `web_server.cpp/h` | Servidor HTTP + captive portal + DNS + mDNS |
 | **UI** | `UserControlGUI.cpp` | Panel de control web (HTML+CSS+JS embebido) |

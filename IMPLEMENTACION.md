@@ -156,3 +156,7 @@ Cada card es independiente con:
 | - | 9 | Auditoria MDE F2 - 2 criticos + 4 medios + 3 bajos corregidos | `UserControlGUI.cpp`, `main.cpp`, `web_server.cpp`, `config.h` |
 | - | 10 | Bug Report analisis - 7 bugs analizados, 1 corregido (spinlock), 4 falsos positivos, 2 ya corregidos + server speed review | `comandos.cpp`, `AUDITORIA.md` |
 | - | 11 | Meta-auditoria MDE+OpenDesign+KnowledgeGraph - 15 hallazgos, 6 corregidos, 9 documentados | `main.cpp`, `web_server.cpp`, `web_server.h`, `AUDITORIA.md` |
+| - | 12 | Agentes filosoficos - Supervisor ampliado + Ockham Razor | `.opencode/skills/` |
+| - | 13 | Infraestructura MDE completa - opencode.json, concilio-salamanca, mde-frontend | `opencode.json`, `.opencode/skills/` |
+| - | 14 | Migracion a protocolos binarios - 52B telemetria, WS_BINARY, memcpy | `web_server.cpp`, `websocket.js`, `trajectory.js` |
+| - | 15 | Correccion de 7 bugs criticos + 15 altos de auditoria completa | `main.cpp`, `web_server.cpp`, `trajectory.js`, `websocket.js`, docs |

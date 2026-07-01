@@ -25,10 +25,17 @@ static void encolarAvanceSegmentado(float distanciaTotal, int velocidad) {
         cmd.velocidad = (int)velSegmento;
         cmd.duracion = (unsigned long)(segDist / 5.0f * 1000) + TIMEOUT_AVANCE_EXTRA_MS;
         
-        web_server_enqueue_command(cmd);
+        if (!web_server_enqueue_command(cmd)) {
+            Serial.println("[SEG] ERROR: cola llena, segmentos truncados");
+            break;
+        }
         
         restante -= segDist;
         count++;
+    }
+    
+    if (restante > 0.5f) {
+        Serial.printf("[SEG] ADVERTENCIA: %.1f cm no segmentados (limite alcanzado)\n", restante);
     }
     
     // FIX [HIGH] Proteger escritura con spinlock (race condition fix)

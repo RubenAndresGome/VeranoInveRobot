@@ -5,10 +5,10 @@ window.wsClient = {
     pollFail: 0,
     wsReconnecting: false,
 
-    FSM_MAP: ['INIT','CALIBRATING','IDLE','ADVANCING','TURNING','BRAKING','ESTOP','MANUAL'],
+    FSM_MAP: ['INIT','CALIBRATING','IDLE','ADVANCING','TURNING','BRAKING','E-STOP','MANUAL'],
 
     decodeBinaryTelemetry(buffer){
-        if (!buffer || buffer.byteLength < 2) return null;
+        if (!buffer || buffer.byteLength < 48) return null;
         const v = new DataView(buffer);
         if (v.getUint8(0) !== 0x01) return null; // version mismatch
         return {
@@ -112,7 +112,11 @@ window.wsClient = {
                     if(gyroVal) gyroVal.textContent = (d.angulo || 0).toFixed(1) + '\u00B0';
                 }
                 if(d.tipo==='estop'){
-                    window.ui.log('ERR','E-STOP recibido del servidor');
+                    if(window.ui){
+                        window.ui.S.estop = true;
+                        window.ui.updFSM('E-STOP');
+                        window.ui.log('ERR','E-STOP recibido del servidor');
+                    }
                 }
             }catch(err){}
         }

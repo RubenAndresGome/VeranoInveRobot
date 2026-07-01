@@ -476,10 +476,10 @@ window.wsClient = {
     pollFail: 0,
     wsReconnecting: false,
 
-    FSM_MAP: ['INIT','CALIBRATING','IDLE','ADVANCING','TURNING','BRAKING','ESTOP','MANUAL'],
+    FSM_MAP: ['INIT','CALIBRATING','IDLE','ADVANCING','TURNING','BRAKING','E-STOP','MANUAL'],
 
     decodeBinaryTelemetry(buffer){
-        if (!buffer || buffer.byteLength < 2) return null;
+        if (!buffer || buffer.byteLength < 48) return null;
         const v = new DataView(buffer);
         if (v.getUint8(0) !== 0x01) return null; // version mismatch
         return {
@@ -583,7 +583,11 @@ window.wsClient = {
                     if(gyroVal) gyroVal.textContent = (d.angulo || 0).toFixed(1) + '\u00B0';
                 }
                 if(d.tipo==='estop'){
-                    window.ui.log('ERR','E-STOP recibido del servidor');
+                    if(window.ui){
+                        window.ui.S.estop = true;
+                        window.ui.updFSM('E-STOP');
+                        window.ui.log('ERR','E-STOP recibido del servidor');
+                    }
                 }
             }catch(err){}
         }
@@ -793,61 +797,65 @@ class TrayectoriaCanvas {
     enviarRutaBinaria() {
         if (this.colaPasos.length === 0) return;
         
-        const N = this.colaPasos.length;
-        const headerSize = 2;
-        const waypointSize = 16; // sizeof(PuntoRuta) = float+float+int32+uint32
-        const totalSize = headerSize + N * waypointSize;
-        
-        const buffer = new ArrayBuffer(totalSize);
-        const view = new DataView(buffer);
-        view.setUint16(0, N, true); // count LE
-        
-        let offset = headerSize;
         let prevX = this.robotPos.x || 0;
         let prevY = this.robotPos.y || 0;
-        let prevHeading = 0;
+        let prevHeading = (this.robotPos.angulo || 0) * Math.PI / 180;
+        
+        // Pre-calcular cuantos waypoints de salida para asignar buffer exacto
+        let outputWaypoints = 0;
+        this.colaPasos.forEach(p => {
+            const dx = p.x - prevX, dy = p.y - prevY;
+            const targetHeading = Math.atan2(dy, dx);
+            let diffAng = (targetHeading - prevHeading) * 180 / Math.PI;
+            while (diffAng > 180) diffAng -= 360;
+            while (diffAng < -180) diffAng += 360;
+            if (Math.abs(diffAng) > 1.0) outputWaypoints++;
+            if (Math.sqrt(dx*dx+dy*dy) > 0.1) outputWaypoints++;
+            prevX = p.x; prevY = p.y; prevHeading = targetHeading;
+        });
+        
+        if (outputWaypoints === 0) return;
+        
+        const headerSize = 2;
+        const waypointSize = 16;
+        const totalSize = headerSize + outputWaypoints * waypointSize;
+        const buffer = new ArrayBuffer(totalSize);
+        const view = new DataView(buffer);
+        view.setUint16(0, outputWaypoints, true);
+        
+        let offset = headerSize;
+        prevX = this.robotPos.x || 0;
+        prevY = this.robotPos.y || 0;
+        prevHeading = (this.robotPos.angulo || 0) * Math.PI / 180;
         
         this.colaPasos.forEach(p => {
-            const dx = p.x - prevX;
-            const dy = p.y - prevY;
+            const dx = p.x - prevX, dy = p.y - prevY;
             const dist = Math.sqrt(dx*dx + dy*dy);
             const targetHeading = Math.atan2(dy, dx);
             let diffAng = (targetHeading - prevHeading) * 180 / Math.PI;
-            // Normalize to [-180, 180]
             while (diffAng > 180) diffAng -= 360;
             while (diffAng < -180) diffAng += 360;
             
-            // If turn needed, encode as separate waypoint
             if (Math.abs(diffAng) > 1.0) {
-                // Giro waypoint
-                view.setFloat32(offset, 0, true); offset += 4;   // distancia=0
-                view.setFloat32(offset, diffAng, true); offset += 4; // angulo
-                view.setInt32(offset, 130, true); offset += 4;   // velocidad
-                view.setUint32(offset, 5000, true); offset += 4; // duracion
+                view.setFloat32(offset, 0, true); offset += 4;
+                view.setFloat32(offset, diffAng, true); offset += 4;
+                view.setInt32(offset, 130, true); offset += 4;
+                view.setUint32(offset, 5000, true); offset += 4;
             }
-            
             if (dist > 0.1) {
-                // Avance waypoint
                 view.setFloat32(offset, dist, true); offset += 4;
                 view.setFloat32(offset, 0, true); offset += 4;
                 view.setInt32(offset, 150, true); offset += 4;
                 view.setUint32(offset, Math.round(dist / 5.0 * 1000) + 2000, true); offset += 4;
             }
-            
-            prevX = p.x;
-            prevY = p.y;
-            prevHeading = targetHeading;
+            prevX = p.x; prevY = p.y; prevHeading = targetHeading;
         });
         
-        // Trim to actual size
-        const final = buffer.slice(0, offset);
-        
         if (window.wsClient && window.wsClient.ws && window.wsClient.ws.readyState === WebSocket.OPEN) {
-            window.wsClient.ws.send(final);
-            if (window.ui) window.ui.log('CMD', 'Ruta binaria enviada (' + N + ' waypoints, ' + final.byteLength + ' bytes)');
+            window.wsClient.ws.send(buffer);
+            if (window.ui) window.ui.log('CMD', 'Ruta binaria enviada (' + outputWaypoints + ' waypoints, ' + buffer.byteLength + ' bytes)');
+            this.limpiar();
         }
-        
-        this.limpiar();
     }
     
     setRobotPos(x, y, angulo) {

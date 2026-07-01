@@ -494,7 +494,7 @@ void tickGiro(float dt) {
 
     // ¿Llegamos al ángulo?
     float errorAng = objetivo.angulo - angZ;
-    if (abs(errorAng) < UMBRAL_GIRO_GRADOS) {
+    if (fabsf(errorAng) < UMBRAL_GIRO_GRADOS) {
         Serial.print("[FSM] Ángulo alcanzado: ");
         Serial.print(angZ, 1);
         Serial.println("°");
@@ -512,8 +512,8 @@ void tickGiro(float dt) {
     
     // Reducir velocidad al acercarse al ángulo objetivo
     int pwm = objetivo.velocidad;
-    if (abs(errorAng) < 20.0f) {
-        pwm = max(80, (int)(objetivo.velocidad * abs(errorAng) / 20.0f));
+    if (fabsf(errorAng) < 20.0f) {
+        pwm = max(80, (int)(objetivo.velocidad * fabsf(errorAng) / 20.0f));
     }
 
     motorGirar(giroDerecha, pwm);
@@ -575,7 +575,7 @@ void procesarComandoSerial() {
             if (coma > 1 && estado == STATE_IDLE) {
                 float ang = cmd.substring(1, coma).toFloat();
                 int vel = cmd.substring(coma + 1).toInt();
-                if (abs(ang) > 0 && abs(ang) <= 360 && vel >= 50 && vel <= 255) {
+                if (fabsf(ang) > 0 && fabsf(ang) <= 360 && vel >= 50 && vel <= 255) {
                     Serial.print("[CMD] Girar ");
                     Serial.print(ang, 1);
                     Serial.print("° @ PWM ");
@@ -759,8 +759,11 @@ void loop() {
         else if(reqState == "MANUAL") nuevo = STATE_MANUAL;
         
         if (nuevo != estado) {
-            Serial.printf("[DEBUG] Forzando FSM override web: %s\n", wsForcedFsmState);
+            Serial.printf("[DEBUG] Forzando FSM override web: %s\n", reqState.c_str());
             cambiarEstado(nuevo);
+            if (nuevo == STATE_MANUAL) {
+                tUltimoComandoManual = millis(); // evitar watchdog inmediato
+            }
         }
     }
 
@@ -776,7 +779,7 @@ void loop() {
                 PuntoRuta cmd = web_server_get_command();
                 if (cmd.distancia == -999) {
                     cambiarEstado(STATE_ESTOP);
-                } else if (abs(cmd.distancia) > 0) {
+                } else if (fabsf(cmd.distancia) > 0) {
                     // Comando ya segmentado: ejecutar directamente
                     objetivo.distancia = cmd.distancia;
                     objetivo.velocidad = cmd.velocidad;
@@ -791,7 +794,7 @@ void loop() {
                         }
                     }
                     portEXIT_CRITICAL(&muxSegmentacion);
-                } else if (abs(cmd.angulo) > 0) {
+                } else if (fabsf(cmd.angulo) > 0) {
                     objetivo.angulo = cmd.angulo;
                     objetivo.velocidad = cmd.velocidad;
                     portENTER_CRITICAL(&muxSegmentacion);

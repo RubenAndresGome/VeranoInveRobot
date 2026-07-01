@@ -84,7 +84,7 @@ extern portMUX_TYPE muxFsmOverride;
 // Broadcast de emergencia a todos los clientes WS
 void web_server_broadcast(const char* msg);
 
-// ── Protocolo Binario de Telemetria (52 bytes, sin heap) ──
+// ── Protocolo Binario de Telemetria (50 bytes, sin heap) ──
 #pragma pack(push, 1)
 struct TelemetryBinary {
     uint8_t version;       // 0x01 — version del protocolo
@@ -105,6 +105,8 @@ struct TelemetryBinary {
     uint16_t padding;      // alineacion a 4 bytes
 };
 #pragma pack(pop)
+static_assert(sizeof(TelemetryBinary) == 50, "TelemetryBinary must be 50 bytes for frontend DataView");
+static_assert(sizeof(PuntoRuta) == 16, "PuntoRuta must be 16 bytes for binary route protocol");
 
 // Mapear estado FSM string -> uint8
 uint8_t estadoToUint8(const char* estado);
