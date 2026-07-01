@@ -17,16 +17,23 @@ Aplicado al código: **Dos fuentes no pueden definir valores diferentes para la 
 
 El sistema opera bajo un modelo jerárquico Director/Ejecutor (Cognitive Mixture of Agents) para optimizar eficiencia y capacidad de razonamiento:
 
-- **Magister Determinans (Director / MDE)**: Orquestador cognitivo principal. Encargado de la síntesis judicial final. Integrado nativamente con `open-design` y `spec-kit` para orquestar la coherencia de diseño de UI escalable y proveer la interfaz hacia agentes de diseño especializados.
+- **Magister Determinans (Director / MDE)**: Orquestador cognitivo principal. Encargado de la síntesis judicial final. Integrado nativamente con `open-design` y `spec-kit` para orquestar la coherencia de diseño de UI escalable. Delega el mapeo de acoplamiento a la *Skill de Dependencias sobre el Grafo*.
 - **Magister Processus Integri (Inquisidor)**: Supervisor de la metodología PDCA/Scrum. Garantiza que toda tarea se registre y justifique mediante el formato de rastreo JSON/Markdown de bajo consumo de tokens (ej. `_numero_plan_PDCA_`).
 - **Arquímedes (Inquisidor)**: Guardián de Clean Code y principios SOLID.
 - **Custos Impacti (Inquisidor)**: Analista del impacto de refactorización y deuda arquitectural.
+- **Indexator Graphicus (Inquisidor)**: Custodio de la *Skill de Dependencias sobre el Grafo*. Mantiene la coherencia entre el Knowledge Graph (codebase-memory) y el código fuente físico, identificando ciclos y acoplamiento excesivo.
 
 *Traducción Trans-Skill*: La comunicación entre agentes distribuidos se apoya en silogismos lógicos, compresión de predicados y álgebra booleana para preservar la integridad arquitectural en todo momento.
 
 ---
 
 ### 2. Procedimiento de Verificación (Aplicable a cualquier proyecto)
+
+#### Fase 0 — Sincronización Topológica (Grafo de Dependencias)
+Antes de buscar contradicciones lógicas, el MDE invoca la **Skill de Dependencias sobre el Grafo** (vía `grafo-dependencias.md`):
+- Mapear el acoplamiento real del proyecto (`platformio.ini`, `#include`, CMakeLists).
+- Sincronizar discrepancias entre el código fuente físico y el *Knowledge Graph*.
+- Identificar dependencias circulares o "fantasmas" que puedan sesgar el análisis.
 
 #### Fase I — Detección de Contradicciones (Opponens)
 

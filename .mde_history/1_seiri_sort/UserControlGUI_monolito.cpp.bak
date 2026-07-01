@@ -1,0 +1,877 @@
+#include "UserControlGUI.h"
+
+const char* HTML_PAGE = R"EOF(
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Autonomo S3</title>
+    <style>
+        *,::before,::after{box-sizing:border-box;border-width:0;border-style:solid}
+        :root{--sl-900:#0f172a;--sl-800:#1e293b;--sl-700:#334155;--sl-600:#475569;--sl-500:#64748b;--sl-400:#94a3b8;--sl-300:#cbd5e1;--bl-900:#1e3a8a;--bl-600:#2563eb;--bl-500:#3b82f6;--bl-400:#60a5fa;--bl-300:#93c5fd;--bl-200:#bfdbfe;--bl-100:#dbeafe;--pu-600:#9333ea;--pu-500:#a855f7;--pu-400:#c084fc;--pu-300:#d8b4fe;--rd-600:#dc2626;--rd-500:#ef4444;--rd-400:#f87171;--am-600:#d97706;--am-500:#f59e0b;--gr-500:#22c55e;--gr-400:#4ade80;--em-900:#064e3b;--em-600:#059669;--em-500:#10b981;--em-400:#34d399;--em-300:#6ee7b7;--in-600:#4f46e5;--in-500:#6366f1;--ye-400:#facc15;--cy-400:#22d3ee;--cy-700:#0e7490}
+        body{margin:0;font-family:'Courier New',Consolas,monospace;background:var(--sl-900);background-image:linear-gradient(rgba(34,211,238,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,0.04) 1px,transparent 1px);background-size:40px 40px;color:#e2e8f0;overflow-x:hidden}
+        .panel-tech{background:var(--sl-900);border:1px solid var(--cy-700);clip-path:polygon(0 8px,8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px))}
+        .panel-header{background:linear-gradient(90deg,var(--cy-700),transparent);border-bottom:1px solid var(--cy-700);padding:6px 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--cy-400);display:flex;justify-content:space-between;align-items:center}
+        .data-value{font-family:'Courier New',monospace;color:var(--cy-400);font-weight:700}
+        .data-label{color:var(--sl-500);font-size:11px;text-transform:uppercase;letter-spacing:1px}
+        .fsm-badge{padding:3px 8px;font-size:11px;letter-spacing:2px;border:1px solid;text-transform:uppercase}
+        .led-dot{width:10px;height:10px;border-radius:50%;display:inline-block;transition:.3s}
+        .led-on{box-shadow:0 0 8px currentColor}
+        .led-off{opacity:.2}
+        .btn-cmd{background:var(--sl-800);border:1px solid var(--cy-700);color:#e2e8f0;padding:8px 14px;font-family:inherit;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:.2s;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+        .btn-cmd:hover{background:var(--cy-700);color:#fff;box-shadow:0 0 12px rgba(34,211,238,.4)}
+        .btn-cmd:active{transform:scale(.97)}
+        .btn-estop{background:rgba(239,68,68,.15);border:2px solid var(--rd-500);color:var(--rd-500);padding:12px 24px;font-size:14px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;animation:pulse-red 2s infinite;transition:.2s}
+        .btn-estop:hover{background:var(--rd-500);color:#fff;box-shadow:0 0 20px rgba(239,68,68,.6)}
+        @keyframes pulse-red{0%,100%{box-shadow:0 0 5px rgba(239,68,68,.3)}50%{box-shadow:0 0 20px rgba(239,68,68,.6)}}
+        .slider-tech{-webkit-appearance:none;appearance:none;width:100%;height:6px;background:var(--sl-800);border:1px solid var(--cy-700);outline:none}
+        .slider-tech::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:18px;background:var(--cy-400);border:1px solid #67e8f9;cursor:pointer;clip-path:polygon(0 20%,50% 0,100% 20%,100% 100%,0 100%)}
+        .slider-tech::-moz-range-thumb{width:14px;height:18px;background:var(--cy-400);border:1px solid #67e8f9;cursor:pointer}
+        @keyframes spin-cw{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes spin-ccw{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+        .motor-spin-cw{animation:spin-cw var(--motor-dur,2s) linear infinite}
+        .motor-spin-ccw{animation:spin-ccw var(--motor-dur,2s) linear infinite}
+        .motor-stop{animation:none}
+        .motor-ring{border-color:var(--sl-600);box-shadow:none;transition:.3s}
+        .motor-fwd{border-color:var(--cy-400);box-shadow:0 0 12px rgba(34,211,238,.5)}
+        .motor-rev{border-color:var(--rd-500);box-shadow:0 0 12px rgba(239,68,68,.5)}
+        .log-cmd{color:var(--cy-400)}.log-sys{color:var(--sl-400)}.log-err{color:var(--rd-400)}.log-warn{color:var(--am-400)}.log-motor{color:var(--gr-400)}
+        .log-container{overflow-y:auto;font-size:10px;font-family:'Courier New',monospace}
+        .log-container::-webkit-scrollbar{width:4px}
+        .log-container::-webkit-scrollbar-thumb{background:var(--cy-700)}
+        .card-content{flex:1;overflow-y:auto;padding:14px}
+        .card-local-log{height:40px;overflow-y:auto;font-size:9px;padding:4px 8px;border-top:1px solid var(--cy-700);background:rgba(2,6,23,.5);flex-shrink:0}
+        .card-local-log::-webkit-scrollbar{width:3px}
+        .card-local-log::-webkit-scrollbar-thumb{background:var(--cy-700)}
+        .fs-btn{font-size:10px;padding:1px 6px;border:1px solid var(--sl-600);color:var(--sl-400);background:none;cursor:pointer;border-radius:2px;transition:.2s}
+        .fs-btn:hover{border-color:var(--cy-400);color:var(--cy-400)}
+        :fullscreen .panel-tech{height:100vh;width:100vw;display:flex;flex-direction:column}
+        :fullscreen .card-content{flex:1}
+        :fullscreen .card-local-log{height:60px}
+        :-webkit-full-screen .panel-tech{height:100vh;width:100vw;display:flex;flex-direction:column}
+        :-webkit-full-screen .card-content{flex:1}
+        :-webkit-full-screen .card-local-log{height:60px}
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header style="border-bottom:1px solid rgba(34,211,238,.3);background:rgba(15,23,42,.8);padding:10px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:10px;height:10px;background:var(--cy-400);border-radius:50%;box-shadow:0 0 10px var(--cy-400);animation:pulse 2s infinite"></div>
+        <span style="color:var(--cy-400);font-size:18px;font-weight:700;letter-spacing:3px">ROBOT-AUTONOMO-S3</span>
+        <span style="color:var(--sl-500);font-size:10px">v2.1 | ESP32-S3</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;font-size:11px">
+        <span class="data-label">IP:</span><span class="data-value" id="hdr-ip">192.168.4.1</span>
+        <span class="data-label">FSM:</span><span id="fsm-badge" class="fsm-badge" style="border-color:var(--cy-500);color:var(--cy-400);background:rgba(34,211,238,.1)">IDLE</span>
+    </div>
+</header>
+
+<main style="max-width:1600px;margin:10px auto;padding:0 15px;display:flex;flex-direction:column;gap:12px">
+
+    <!-- FILA: TELEMETRIA -->
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">
+        <div class="panel-tech" style="padding:8px"><div class="data-label">Estado</div><div class="data-value" id="tel-estado" style="font-size:12px">INIT</div></div>
+        <div class="panel-tech" style="padding:8px"><div class="data-label">Distancia</div><div class="data-value" style="font-size:12px"><span id="tel-dist">0.0</span> cm</div></div>
+        <div class="panel-tech" style="padding:8px"><div class="data-label">Angulo</div><div class="data-value" style="font-size:12px"><span id="tel-ang">0.0</span>°</div></div>
+        <div class="panel-tech" style="padding:8px"><div class="data-label">Pos X</div><div class="data-value" style="font-size:12px"><span id="tel-posx">0.0</span></div></div>
+        <div class="panel-tech" style="padding:8px"><div class="data-label">Pos Y</div><div class="data-value" style="font-size:12px"><span id="tel-posy">0.0</span></div></div>
+        <div class="panel-tech" style="padding:8px"><div class="data-label">PID Corr</div><div class="data-value" style="font-size:12px"><span id="tel-pid">0.0</span></div></div>
+        <div class="panel-tech" style="padding:8px"><div class="data-label">Restante</div><div class="data-value" style="font-size:12px"><span id="tel-rest">0.0</span> cm</div></div>
+        <div class="panel-tech" style="padding:8px"><div class="data-label">Target</div><div class="data-value" style="font-size:12px"><span id="tel-target">0.0</span> cm</div></div>
+    </section>
+
+    <!-- FILA: CONTROL + PWM -->
+    <section style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <!-- TARJETA: CONTROL MANUAL Y TRAYECTORIA -->
+        <div class="panel-tech" style="display:flex;flex-direction:column;" id="card-control">
+            <div class="panel-header">
+                <span>// CONTROL VECTORIAL Y TRAYECTORIA</span>
+                <div>
+                    <span style="color:var(--cy-600);font-size:10px">[WS-LINK]</span>
+                    <button class="fs-btn" onclick="toggleFS('card-control')">⛶</button>
+                </div>
+            </div>
+            <div class="card-content" style="display:grid;grid-template-columns: 1fr 1.2fr; gap:16px; padding:14px; align-items:center;">
+                
+                <!-- COLUMNA 1: JOYSTICK VECTORIAL -->
+                <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+                    <span style="font-size:10px;color:var(--cy-400);letter-spacing:1px;font-weight:bold;">[JOYSTICK] VECTORIAL ACTIVO</span>
+                    <!-- Contenedor del Joystick -->
+                    <div id="joystick-container" style="position:relative;width:180px;height:180px;background:#020617;border-radius:50%;border:2px solid rgba(34,211,238,0.3);box-shadow:inset 0 0 30px rgba(0,0,0,0.9), 0 0 15px rgba(34,211,238,0.1);touch-action:none;user-select:none;cursor:pointer;">
+                        <!-- Retícula SVG -->
+                        <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0.3" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#22d3ee" stroke-width="0.5" stroke-dasharray="2,2"/>
+                            <circle cx="50" cy="50" r="25" fill="none" stroke="#22d3ee" stroke-width="0.5"/>
+                            <line x1="5" y1="50" x2="95" y2="50" stroke="#22d3ee" stroke-width="0.5"/>
+                            <line x1="50" y1="5" x2="50" y2="95" stroke="#22d3ee" stroke-width="0.5"/>
+                        </svg>
+                        <!-- Perilla (Knob) -->
+                        <div id="joystick-knob" style="position:absolute;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#475569,#0f172a);border:2px solid var(--cy-400);box-shadow:0 0 12px rgba(34,211,238,0.6);top:50%;left:50%;transform:translate(-50%,-50%);">
+                            <div style="position:absolute;inset:8px;border-radius:50%;background:var(--sl-800);border:1px solid rgba(34,211,238,0.3);display:flex;align-items:center;justify-content:center;">
+                                <div style="width:6px;height:6px;background:var(--cy-400);border-radius:50%;box-shadow:0 0 6px var(--cy-400)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lecturas -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:240px;text-align:center;">
+                        <div style="background:#020617;padding:4px;border:1px solid var(--sl-700)">
+                            <div class="data-label">Thrust (PWM)</div>
+                            <div id="joy-speed" class="data-value" style="font-size:14px">0</div>
+                        </div>
+                        <div style="background:#020617;padding:4px;border:1px solid var(--sl-700)">
+                            <div class="data-label">Vector</div>
+                            <div id="joy-angle" class="data-value" style="font-size:14px;color:#c084fc">0°</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-estop" style="padding:6px 12px;font-size:11px;letter-spacing:1px;width:100%;max-width:240px;" onclick="cmd('estop')">E-STOP INMEDIATO</button>
+                </div>
+                
+                <!-- COLUMNA 2: TRAYECTORIA Y GIROSCOPIO -->
+                <div style="display:flex;flex-direction:column;gap:8px;height:100%;justify-content:center;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:10px;color:var(--cy-400);letter-spacing:1px;font-weight:bold;">[PLANIFICADOR] TRAYECTORIA</span>
+                        <div style="display:flex;gap:4px">
+                            <button onclick="limpiarRuta()" class="fs-btn" style="font-size:8px;padding:2px 5px;">CLEAR</button>
+                            <button onclick="enviarRutaRobot()" class="fs-btn" style="font-size:8px;padding:2px 5px;border-color:var(--cy-400);color:var(--cy-400)">ENVIAR RUTA</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <!-- Canvas Trayectoria -->
+                        <div style="position:relative;background:#020617;border:1px solid var(--cy-700);border-radius:4px;flex:1;height:150px;overflow:hidden;">
+                            <canvas id="canvas-trayectoria" style="width:100%;height:100%;display:block;cursor:crosshair;"></canvas>
+                        </div>
+                        
+                        <!-- Giroscopio SVG -->
+                        <div style="display:flex;flex-direction:column;align-items:center;width:75px;gap:4px;">
+                            <div style="position:relative;width:66px;height:66px;">
+                                <svg viewBox="0 0 100 100" style="width:100%;height:100%;">
+                                    <circle cx="50" cy="50" r="45" fill="none" stroke="var(--cy-700)" stroke-width="1.5"/>
+                                    <circle cx="50" cy="50" r="38" fill="none" stroke="var(--sl-800)" stroke-width="1" stroke-dasharray="2,2"/>
+                                    <text x="50" y="20" text-anchor="middle" fill="var(--sl-500)" font-size="8">N</text>
+                                    <text x="50" y="88" text-anchor="middle" fill="var(--sl-500)" font-size="8">S</text>
+                                    <!-- Aguja del Giroscopio -->
+                                    <g id="gyro-needle" style="transform-origin:50px 50px;transition:0.1s ease-out;">
+                                        <line x1="50" y1="50" x2="50" y2="15" stroke="var(--cy-400)" stroke-width="2"/>
+                                        <polygon points="50,10 47,18 53,18" fill="var(--cy-400)"/>
+                                        <circle cx="50" cy="50" r="4" fill="var(--cy-400)"/>
+                                    </g>
+                                </svg>
+                            </div>
+                            <span class="data-label" style="font-size:8px;">HEADING</span>
+                            <span class="data-value" id="gyro-value" style="font-size:10px;">0.0°</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="card-local-log" id="log-control">> Panel vectorial inicializado. Toca el Joystick o dibuja en el mapa...</div>
+        </div>
+
+        <!-- TARJETA: PWM CONTROL -->
+        <div class="panel-tech" style="display:flex;flex-direction:column" id="card-pwm">
+            <div class="panel-header"><span>// PWM CONTROL</span><div><span style="color:var(--cy-600);font-size:10px">[0-255]</span><button class="fs-btn" onclick="toggleFS('card-pwm')">⛶</button></div></div>
+            <div class="card-content" style="padding:14px;display:flex;flex-direction:column;gap:12px">
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:10px"><span class="data-label">Motor Izq (ENA)</span><span class="data-value" id="lbl-pwm-i">150</span></div>
+                    <input type="range" min="0" max="255" value="150" class="slider-tech" id="sl-pwm-i" oninput="setPWM('i',this.value)">
+                </div>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:10px"><span class="data-label">Motor Der (ENB)</span><span class="data-value" id="lbl-pwm-d">150</span></div>
+                    <input type="range" min="0" max="255" value="150" class="slider-tech" id="sl-pwm-d" oninput="setPWM('d',this.value)">
+                </div>
+                <div style="padding-top:8px;border-top:1px solid var(--sl-700)">
+                    <span class="data-label">Animacion:</span>
+                    <span class="data-value" id="anim-speed" style="font-size:11px">—</span>
+                </div>
+            </div>
+            <div class="card-local-log" id="log-pwm">> Log PWM...</div>
+        </div>
+    </section>
+
+    <!-- FILA: MOTORES + CHASIS -->
+    <section style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <!-- Motor Izquierdo -->
+        <div class="panel-tech" style="display:flex;flex-direction:column" id="card-motor-i">
+            <div class="panel-header"><span>// MOTOR IZQ — OUT1/OUT2</span><div><span id="status-mi" style="color:var(--sl-500);font-size:10px">STOP</span><button class="fs-btn" onclick="toggleFS('card-motor-i')">⛶</button></div></div>
+            <div class="card-content" style="padding:20px;display:flex;flex-direction:column;align-items:center">
+                <div style="position:relative;width:100px;height:100px;margin-bottom:10px">
+                    <div style="position:absolute;inset:0;border-radius:50%;border:2px solid var(--sl-700)"></div>
+                    <div style="position:absolute;inset:0">
+                        <div style="position:absolute;top:0;left:50%;width:1px;height:4px;background:var(--sl-700);transform:translateX(-50%)"></div>
+                        <div style="position:absolute;bottom:0;left:50%;width:1px;height:4px;background:var(--sl-700);transform:translateX(-50%)"></div>
+                        <div style="position:absolute;left:0;top:50%;width:4px;height:1px;background:var(--sl-700);transform:translateY(-50%)"></div>
+                        <div style="position:absolute;right:0;top:50%;width:4px;height:1px;background:var(--sl-700);transform:translateY(-50%)"></div>
+                    </div>
+                    <div id="rotor-i" class="motor-stop" style="position:absolute;inset:6px">
+                        <div class="motor-ring" style="position:absolute;inset:0;border-radius:50%;border:2px solid var(--sl-600)"></div>
+                        <div id="marker-i" style="position:absolute;top:50%;left:50%;width:2px;height:50%;background:var(--sl-600);transform-origin:bottom center;transform:translate(-50%,-100%)"></div>
+                        <div style="position:absolute;top:50%;left:50%;width:10px;height:10px;border-radius:50%;background:var(--sl-800);border:1px solid var(--sl-600);transform:translate(-50%,-50%)"></div>
+                    </div>
+                </div>
+                <span class="data-label">Encoder GPIO4</span>
+                <span class="data-value" id="enc-i" style="font-size:12px">0</span>
+            </div>
+            <div class="card-local-log" id="log-motor-i">> Motor I: STOP</div>
+        </div>
+
+        <!-- Chasis SVG -->
+        <div class="panel-tech" style="display:flex;flex-direction:column" id="card-chasis">
+            <div class="panel-header"><span>// CHASIS — TRACCION DIFERENCIAL</span><div><span style="color:var(--cy-600);font-size:10px">[TOP VIEW]</span><button class="fs-btn" onclick="toggleFS('card-chasis')">⛶</button></div></div>
+            <div class="card-content" style="padding:10px;display:flex;justify-content:center;align-items:center">
+                <svg viewBox="0 0 160 200" style="width:140px;height:175px">
+                    <rect x="35" y="30" width="90" height="140" rx="6" fill="none" stroke="var(--cy-700)" stroke-width="1.5"/>
+                    <polygon points="80,10 72,28 88,28" fill="var(--cy-400)"/>
+                    <line x1="80" y1="30" x2="80" y2="170" stroke="var(--sl-700)" stroke-width="1" stroke-dasharray="3,3"/>
+                    <rect id="ch-m1" x="18" y="50" width="20" height="40" rx="3" fill="none" stroke="var(--sl-600)" stroke-width="1.5"/>
+                    <text x="28" y="75" text-anchor="middle" fill="var(--sl-500)" font-size="7">M1</text>
+                    <rect id="ch-m2" x="122" y="50" width="20" height="40" rx="3" fill="none" stroke="var(--sl-600)" stroke-width="1.5"/>
+                    <text x="132" y="75" text-anchor="middle" fill="var(--sl-500)" font-size="7">M2</text>
+                    <rect x="62" y="90" width="36" height="18" rx="2" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,2"/>
+                    <text x="80" y="103" text-anchor="middle" fill="#f59e0b" font-size="6">MPU</text>
+                    <rect x="55" y="120" width="50" height="30" rx="2" fill="none" stroke="var(--cy-400)" stroke-width="1"/>
+                    <text x="80" y="139" text-anchor="middle" fill="var(--cy-400)" font-size="7">ESP32-S3</text>
+                    <text x="80" y="190" text-anchor="middle" fill="var(--sl-600)" font-size="8">FRONT ▲</text>
+                </svg>
+            </div>
+            <div class="card-local-log" id="log-chasis">> Chasis OK</div>
+        </div>
+
+        <!-- Motor Derecho -->
+        <div class="panel-tech" style="display:flex;flex-direction:column" id="card-motor-d">
+            <div class="panel-header"><span>// MOTOR DER — OUT3/OUT4</span><div><span id="status-md" style="color:var(--sl-500);font-size:10px">STOP</span><button class="fs-btn" onclick="toggleFS('card-motor-d')">⛶</button></div></div>
+            <div class="card-content" style="padding:20px;display:flex;flex-direction:column;align-items:center">
+                <div style="position:relative;width:100px;height:100px;margin-bottom:10px">
+                    <div style="position:absolute;inset:0;border-radius:50%;border:2px solid var(--sl-700)"></div>
+                    <div style="position:absolute;inset:0">
+                        <div style="position:absolute;top:0;left:50%;width:1px;height:4px;background:var(--sl-700);transform:translateX(-50%)"></div>
+                        <div style="position:absolute;bottom:0;left:50%;width:1px;height:4px;background:var(--sl-700);transform:translateX(-50%)"></div>
+                        <div style="position:absolute;left:0;top:50%;width:4px;height:1px;background:var(--sl-700);transform:translateY(-50%)"></div>
+                        <div style="position:absolute;right:0;top:50%;width:4px;height:1px;background:var(--sl-700);transform:translateY(-50%)"></div>
+                    </div>
+                    <div id="rotor-d" class="motor-stop" style="position:absolute;inset:6px">
+                        <div class="motor-ring" style="position:absolute;inset:0;border-radius:50%;border:2px solid var(--sl-600)"></div>
+                        <div id="marker-d" style="position:absolute;top:50%;left:50%;width:2px;height:50%;background:var(--sl-600);transform-origin:bottom center;transform:translate(-50%,-100%)"></div>
+                        <div style="position:absolute;top:50%;left:50%;width:10px;height:10px;border-radius:50%;background:var(--sl-800);border:1px solid var(--sl-600);transform:translate(-50%,-50%)"></div>
+                    </div>
+                </div>
+                <span class="data-label">Encoder GPIO5</span>
+                <span class="data-value" id="enc-d" style="font-size:12px">0</span>
+            </div>
+            <div class="card-local-log" id="log-motor-d">> Motor D: STOP</div>
+        </div>
+    </section>
+
+    <!-- FILA: LOGS + PIN MAP -->
+    <section style="display:grid;grid-template-columns:3fr 1fr;gap:12px">
+        <div class="panel-tech" style="display:flex;flex-direction:column" id="card-logs">
+            <div class="panel-header">
+                <span>// LOGS — REGISTRO DE EVENTOS</span>
+                <div style="display:flex;gap:4px">
+                    <button onclick="limpiarLog()" class="fs-btn">LIMPIAR</button>
+                    <button onclick="exportLog()" class="fs-btn" style="border-color:var(--cy-700);color:var(--cy-400)">↓ TXT</button>
+                    <button class="fs-btn" onclick="toggleFS('card-logs')">⛶</button>
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;flex:1;min-height:0">
+                <div id="log-container" class="log-container" style="flex:1;padding:6px;background:rgba(2,6,23,.5);min-height:80px">
+                    <div class="log-sys">[SYS] Sistema iniciado...</div>
+                </div>
+                <div class="card-local-log" id="log-logs">> Logs del sistema</div>
+            </div>
+        </div>
+
+        <div class="panel-tech" style="display:flex;flex-direction:column">
+            <div class="panel-header"><span>// HAL — PIN MAP</span><span style="color:var(--cy-600)">[GPIO]</span></div>
+            <div style="padding:8px;font-size:10px;display:grid;grid-template-columns:1fr 1fr;gap:2px;max-height:120px;overflow-y:auto">
+                <span class="data-label">ENA</span><span class="data-value">GPIO15</span>
+                <span class="data-label">IN1/IN2</span><span class="data-value">GPIO16/17</span>
+                <span class="data-label">ENB</span><span class="data-value">GPIO18</span>
+                <span class="data-label">IN3/IN4</span><span class="data-value">GPIO8/9</span>
+                <span class="data-label">ENC I/D</span><span class="data-value">GPIO4/5</span>
+                <span class="data-label">I2C SDA/SCL</span><span class="data-value">GPIO6/7</span>
+                <span class="data-label">LEDs</span><span class="data-value">GPIO38-40</span>
+                <span class="data-label">E-STOP</span><span class="data-value">GPIO41</span>
+            </div>
+        </div>
+    </section>
+
+    <footer style="text-align:center;font-size:10px;color:var(--sl-600);padding:10px 0">
+        HMI Robot Autonomo ESP32-S3 | L298N | MPU6050 | LM393<br>
+        <span style="color:var(--sl-500)">WiFi: ROBOT-AUTONOMO-S3 | http://192.168.4.1 | http://robot.local</span>
+    </footer>
+
+</main>
+
+<script>
+// ── GLOBALES DE ESTADO ──
+const S={fsm:'IDLE',pwmI:150,pwmD:150,estI:'stop',estD:'stop',estop:false,logs:[]}
+
+// ── FULLSCREEN ──
+function toggleFS(id){
+    const el=document.getElementById(id)
+    if(!document.fullscreenElement){el.requestFullscreen().catch(()=>{})}
+    else{document.exitFullscreen()}
+}
+
+// ── CARD LOGS ──
+function cardLog(id,msg){
+    const el=document.getElementById('log-'+id)
+    if(!el)return
+    const t=new Date().toTimeString().substring(0,8)
+    const d=document.createElement('div')
+    d.textContent='['+t+'] '+msg
+    el.appendChild(d)
+    el.scrollTop=el.scrollHeight
+    while(el.children.length>20)el.removeChild(el.firstChild)
+}
+
+// ── LOGS ──
+function log(tipo,msg){
+    const t=new Date().toTimeString().substring(0,8)
+    const txt=`[${t}] ${tipo}: ${msg}`
+    S.logs.push({texto:txt,timestamp:new Date().toISOString(),tipo,mensaje:msg})
+    const c=document.getElementById('log-container'),d=document.createElement('div')
+    d.className='log-'+tipo.toLowerCase()
+    d.textContent=txt
+    c.appendChild(d);c.scrollTop=c.scrollHeight
+    if(c.children.length>40)c.removeChild(c.firstChild)
+}
+function limpiarLog(){S.logs=[];document.getElementById('log-container').innerHTML='';log('SYS','Logs limpiados')}
+function exportLog(){
+    if(!S.logs.length){log('WARN','No hay logs');return}
+    let txt='LOGS ROBOT\n'+'='.repeat(50)+'\n'
+    S.logs.forEach(l=>txt+=l.texto+'\n')
+    const b=new Blob([txt],{type:'text/plain'}),a=document.createElement('a')
+    a.href=URL.createObjectURL(b);a.download='robot_logs.txt';a.click()
+    log('SYS','Logs exportados')
+}
+
+// ── FSM ──
+const FSM_STYLES={INIT:'amber',CALIBRATING:'amber',IDLE:'green',ADVANCING:'cyan',TURNING:'cyan',BRAKING:'amber','E-STOP':'red',MANUAL:'cyan'}
+function updFSM(est){
+    S.fsm=est
+    const b=document.getElementById('fsm-badge'),c=FSM_STYLES[est]||'slate'
+    const col={'amber':['#f59e0b','amber'],'green':['#22c55e','green'],'cyan':['#22d3ee','cyan'],'red':['#ef4444','red']}[c]||['#64748b','slate']
+    b.style.borderColor=col[0];b.style.color=col[0];b.textContent=est
+    toggleLED('led-idle',est==='IDLE'||est==='INIT'||est==='CALIBRATING')
+    toggleLED('led-moving',est==='ADVANCING'||est==='TURNING'||est==='MANUAL')
+    toggleLED('led-error',est==='E-STOP')
+}
+function toggleLED(id,on){
+    const e=document.getElementById(id)
+    if(!e) return
+    if(on){e.classList.remove('led-off');e.classList.add('led-on')}
+    else{e.classList.add('led-off');e.classList.remove('led-on')}
+}
+
+// ── MOTORES ──
+function calcAnim(pwm){return pwm<=0?'0s':(5-(pwm/255)*4.7).toFixed(2)+'s'}
+function updMotor(lado,est,pwm){
+    const r=document.getElementById('rotor-'+lado),m=document.getElementById('marker-'+lado),s=document.getElementById('status-m'+lado)
+    if(!r || !m || !s) return
+    r.classList.remove('motor-spin-cw','motor-spin-ccw','motor-stop')
+    const ring=r.querySelector('.motor-ring')
+    if(ring) ring.classList.remove('motor-fwd','motor-rev')
+    
+    if(est==='stop'||pwm===0){
+        r.classList.add('motor-stop')
+        m.style.background='var(--sl-600)';s.textContent='STOP';s.style.color='var(--sl-500)'
+    }else if(est==='fwd'){
+        r.classList.add('motor-spin-cw')
+        r.style.setProperty('--motor-dur',calcAnim(pwm))
+        if(ring) ring.classList.add('motor-fwd')
+        m.style.background='var(--cy-400)';s.textContent='FWD '+pwm;s.style.color='var(--cy-400)'
+    }else{
+        r.classList.add('motor-spin-ccw')
+        r.style.setProperty('--motor-dur',calcAnim(pwm))
+        if(ring) ring.classList.add('motor-rev')
+        m.style.background='var(--rd-500)';s.textContent='REV '+pwm;s.style.color='var(--rd-500)'
+    }
+    if(lado==='i'){S.estI=est;cardLog('motor-i',est+(pwm>0?' '+pwm:''))}
+    else{S.estD=est;cardLog('motor-d',est+(pwm>0?' '+pwm:''))}
+    updAnimSpeed()
+}
+function updAnimSpeed(){
+    const prom=(S.pwmI+S.pwmD)/2
+    document.getElementById('anim-speed').textContent=prom===0?'— detenido':calcAnim(prom)+'/rev'
+}
+
+// ── COMANDOS DE ACCION COMPATIBILIDAD ──
+function cmd(tipo){
+    if(S.estop&&tipo!=='reset'){log('WARN','E-STOP activo.');return}
+    if(tipo==='estop'){
+        S.estop=true;
+        updMotor('i','stop',0);
+        updMotor('d','stop',0);
+        updFSM('E-STOP');
+        log('ERR','!!! E-STOP ACTIVADO !!!');
+        cardLog('control','⚠ E-STOP ACTIVADO');
+        cardLog('motor-i','E-STOP');
+        cardLog('motor-d','E-STOP');
+        if(ws&&ws.readyState===WebSocket.OPEN) ws.send('ESTOP');
+        return;
+    }
+    
+    // Fallback de compatibilidad
+    const pI=S.pwmI,pD=S.pwmD;
+    let p=new URLSearchParams({tipo,valor1:pI,valor2:pD});
+    fetch('/cmd',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:p.toString()})
+    .then(r=>{if(r.status===503)log('WARN','Cola llena!')}).catch(()=>log('ERR','Error de red'));
+}
+
+// ── PWM ──
+function setPWM(lado,val){
+    const pwm=parseInt(val)
+    if(lado==='i'){
+        S.pwmI=pwm;
+        document.getElementById('lbl-pwm-i').textContent=pwm;
+        cardLog('pwm','I='+pwm);
+        if(S.estI!=='stop'&&!S.estop) updMotor('i',S.estI,pwm);
+    } else {
+        S.pwmD=pwm;
+        document.getElementById('lbl-pwm-d').textContent=pwm;
+        cardLog('pwm','D='+pwm);
+        if(S.estD!=='stop'&&!S.estop) updMotor('d',S.estD,pwm);
+    }
+    updAnimSpeed();
+}
+
+// ── CLASE VIRTUAL JOYSTICK DE CERO LATENCIA ──
+class VirtualJoystick {
+    constructor(containerId, knobId, callback) {
+        this.container = document.getElementById(containerId);
+        this.knob = document.getElementById(knobId);
+        this.callback = callback;
+        this.active = false;
+        this.maxDist = 55; // Radio en pixeles
+        this.bindEvents();
+    }
+    bindEvents() {
+        ['touchstart', 'mousedown'].forEach(evt => 
+            this.container.addEventListener(evt, e => this.start(e), {passive: false}));
+        ['touchmove', 'mousemove'].forEach(evt => 
+            window.addEventListener(evt, e => this.move(e), {passive: false}));
+        ['touchend', 'mouseup', 'mouseleave'].forEach(evt => 
+            window.addEventListener(evt, e => this.end(e)));
+    }
+    getCoords(e) {
+        const touch = e.touches ? e.touches[0] : e;
+        const rect = this.container.getBoundingClientRect();
+        return {
+            x: touch.clientX - rect.left - rect.width / 2,
+            y: touch.clientY - rect.top - rect.height / 2
+        };
+    }
+    start(e) {
+        if(S.estop) return;
+        e.preventDefault();
+        this.active = true;
+        this.move(e);
+    }
+    move(e) {
+        if (!this.active || S.estop) return;
+        e.preventDefault();
+        let { x, y } = this.getCoords(e);
+        let dist = Math.sqrt(x*x + y*y);
+        
+        if (dist > this.maxDist) {
+            const ratio = this.maxDist / dist;
+            x *= ratio; y *= ratio; dist = this.maxDist;
+        }
+        
+        this.knob.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+        
+        const speed = Math.round((dist / this.maxDist) * 255);
+        const angle = Math.atan2(-y, x) * 180 / Math.PI;
+        this.callback(speed, angle);
+    }
+    end(e) {
+        if (!this.active) return;
+        this.active = false;
+        this.knob.style.transform = 'translate(-50%, -50%)';
+        this.callback(0, 0);
+    }
+}
+
+// ── CANVAS TRAYECTORIA DOBLE BUFFER (OPTIMIZADO) ──
+class TrayectoriaCanvas {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.colaPasos = [];
+        this.robotPos = { x: 0, y: 0, angulo: 0 };
+        this.escala = 1.2; // 1.2 px/cm
+        
+        this._lastTouch = 0;
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        
+        this.canvas.addEventListener('mousedown', (e) => {
+            if(Date.now() - this._lastTouch < 300) return;
+            this.click(e);
+        });
+        this.canvas.addEventListener('touchstart', (e) => {
+            this._lastTouch = Date.now();
+            this.click(e);
+        }, {passive: true});
+    }
+    resize() {
+        const rect = this.canvas.getBoundingClientRect();
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
+        this.draw();
+    }
+    click(e) {
+        if (S.estop) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        const clickX = touch.clientX - rect.left;
+        const clickY = touch.clientY - rect.top;
+        
+        const centroX = this.canvas.width / 2;
+        const centroY = this.canvas.height / 2;
+        
+        const rx = (clickX - centroX) / this.escala;
+        const ry = (centroY - clickY) / this.escala;
+        
+        this.colaPasos.push({ x: rx, y: ry });
+        cardLog('control', `Waypoint: X=${rx.toFixed(1)} Y=${ry.toFixed(1)}`);
+        this.draw();
+    }
+    limpiar() {
+        this.colaPasos = [];
+        this.draw();
+    }
+    setRobotPos(x, y, angulo) {
+        this.robotPos.x = x;
+        this.robotPos.y = y;
+        this.robotPos.angulo = angulo;
+        this.draw();
+    }
+    draw() {
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const ctx = this.ctx;
+        
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, w, h);
+        
+        // Rejilla de Fondo
+        ctx.strokeStyle = 'rgba(34, 211, 238, 0.06)';
+        ctx.lineWidth = 0.5;
+        const gridSize = 20;
+        for (let x = 0; x < w; x += gridSize) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+        }
+        for (let y = 0; y < h; y += gridSize) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+        }
+        
+        const centroX = w / 2;
+        const centroY = h / 2;
+        
+        // Ejes origen
+        ctx.strokeStyle = 'rgba(34, 211, 238, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(centroX - 10, centroY); ctx.lineTo(centroX + 10, centroY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(centroX, centroY - 10); ctx.lineTo(centroX, centroY + 10); ctx.stroke();
+        
+        // Dibujar ruta planificada
+        if (this.colaPasos.length > 0) {
+            ctx.strokeStyle = '#a855f7';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 2]);
+            ctx.beginPath();
+            
+            const startX = centroX + this.robotPos.x * this.escala;
+            const startY = centroY - this.robotPos.y * this.escala;
+            ctx.moveTo(startX, startY);
+            
+            this.colaPasos.forEach(p => {
+                const px = centroX + p.x * this.escala;
+                const py = centroY - p.y * this.escala;
+                ctx.lineTo(px, py);
+            });
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Círculos waypoints
+            this.colaPasos.forEach((p, idx) => {
+                const px = centroX + p.x * this.escala;
+                const py = centroY - p.y * this.escala;
+                ctx.fillStyle = '#c084fc';
+                ctx.beginPath();
+                ctx.arc(px, py, 3, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(192, 132, 252, 0.2)';
+                ctx.beginPath();
+                ctx.arc(px, py, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '8px monospace';
+                ctx.fillText(idx + 1, px + 5, py - 5);
+            });
+        }
+        
+        // Dibujar robot en coordenadas actuales
+        const rx = centroX + this.robotPos.x * this.escala;
+        const ry = centroY - this.robotPos.y * this.escala;
+        
+        ctx.save();
+        ctx.translate(rx, ry);
+        ctx.rotate(-this.robotPos.angulo * Math.PI / 180);
+        
+        ctx.fillStyle = 'rgba(34, 211, 238, 0.15)';
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.rect(-8, -12, 16, 24);
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.fillStyle = '#22d3ee';
+        ctx.beginPath();
+        ctx.moveTo(0, -15);
+        ctx.lineTo(-4, -12);
+        ctx.lineTo(4, -12);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
+    }
+}
+
+let canvasTrayectoria = null;
+function limpiarRuta() {
+    if(canvasTrayectoria) canvasTrayectoria.limpiar();
+    cardLog('control', 'Ruta limpiada');
+}
+
+function enviarRutaRobot() {
+    if(!canvasTrayectoria || canvasTrayectoria.colaPasos.length === 0) return;
+    
+    // Formato ultraligero C++ RUTA:X1.2Y3.4;X5Y6;
+    const payload = "RUTA:" + canvasTrayectoria.colaPasos.map(p => `X${p.x.toFixed(1)}Y${p.y.toFixed(1)}`).join(';');
+    if(ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(payload);
+        log('CMD', `Enviada ruta: ${canvasTrayectoria.colaPasos.length} waypoints`);
+        cardLog('control', `Ruta enviada (${canvasTrayectoria.colaPasos.length} wps)`);
+        canvasTrayectoria.limpiar();
+    } else {
+        log('ERR', 'WebSocket desconectado. No se pudo enviar ruta.');
+    }
+}
+
+// ── WEBSOCKET + HTTP FALLBACK ──
+let ws=null, wsFail=0, pollInterval=null, pollFail=0, wsReconnecting=false
+
+function applyTelemetry(t){
+    if(!t)return
+    document.getElementById('tel-estado').textContent=t.estado||'--'
+    document.getElementById('tel-dist').textContent=(t.distancia||0).toFixed(1)
+    document.getElementById('tel-ang').textContent=(t.angulo||0).toFixed(1)
+    document.getElementById('tel-posx').textContent=(t.posX||0).toFixed(1)
+    document.getElementById('tel-posy').textContent=(t.posY||0).toFixed(1)
+    document.getElementById('tel-pid').textContent=(t.pidCorr||0).toFixed(2)
+    document.getElementById('tel-rest').textContent=(t.distRestante||0).toFixed(1)
+    document.getElementById('tel-target').textContent=(t.targetDist||0).toFixed(1)
+    document.getElementById('enc-i').textContent=t.pulsosIzq||0
+    document.getElementById('enc-d').textContent=t.pulsosDer||0
+    
+    const est=t.estado||'IDLE'
+    if(est!==S.fsm){
+        if(S.fsm!=='MANUAL') updFSM(est);
+        // Sincronizar velocidad/animacion en motores fisicos si reporta
+        // No sobrescribir estado manual del joystick/teclado
+        if(S.fsm==='MANUAL') return;
+        if(est==='ADVANCING' || est==='MANUAL') {
+            updMotor('i','fwd',t.pwmIzq||S.pwmI);
+            updMotor('d','fwd',t.pwmDer||S.pwmD);
+        } else if (est==='TURNING') {
+            updMotor('i','rev',t.pwmIzq||S.pwmI);
+            updMotor('d','fwd',t.pwmDer||S.pwmD);
+        } else {
+            updMotor('i','stop',0);
+            updMotor('d','stop',0);
+        }
+    }
+    }
+}
+
+function initWS(){
+    const proto=window.location.protocol==='https:'?'wss:':'ws:'
+    const host=window.location.hostname||'192.168.4.1'
+    const url=proto+'//'+host+'/ws'
+    log('SYS','WS: Conectando a '+url)
+    ws=new WebSocket(url)
+    
+    ws.onopen=()=>{
+        log('SYS','WS: Conectado');
+        wsFail=0;
+        if(pollInterval){clearInterval(pollInterval);pollInterval=null}
+        document.getElementById('hdr-ip').style.color='var(--cy-400)';
+    }
+    ws.onclose=()=>{
+        log('WARN','WS: Desconectado. Usando fallback HTTP y reintentando...');
+        document.getElementById('hdr-ip').style.color='var(--rd-500)';
+        if(!wsReconnecting){
+            wsReconnecting=true;
+            setTimeout(()=>{wsReconnecting=false;initWS()},3000);
+        }
+        if(!pollInterval)startPollFallback();
+    }
+    ws.onerror=()=>{
+        wsFail++;
+        if(wsFail===1){
+            log('WARN','WS: Error de conexión');
+            if(!pollInterval)startPollFallback();
+        }
+    }
+    ws.onmessage=(e)=>{
+        try{
+            const d=JSON.parse(e.data)
+            if(d.tipo==='telem') {
+                applyTelemetry(d);
+                if(canvasTrayectoria) {
+                    canvasTrayectoria.setRobotPos(d.posX || 0, d.posY || 0, d.angulo || 0);
+                }
+                const needle = document.getElementById('gyro-needle');
+                if(needle) needle.style.transform = `rotate(${d.angulo || 0}deg)`;
+                const gyroVal = document.getElementById('gyro-value');
+                if(gyroVal) gyroVal.textContent = (d.angulo || 0).toFixed(1) + '°';
+            }
+        }catch(err){}
+    }
+}
+
+function startPollFallback(){
+    log('SYS','Polling HTTP iniciado (fallback)')
+    pollInterval=setInterval(()=>{
+        fetch('/status').then(r=>r.json()).then(d=>{
+            pollFail=0
+            if(d.telemetria) applyTelemetry(d.telemetria)
+        }).catch(()=>{pollFail++;if(pollFail>5)log('WARN','Polling: sin respuesta')})
+    },500)
+}
+
+// ── KEYBOARD CONTROL CON SOPORTE LATENCIA CERO ──
+const teclasPresionadas = {};
+document.addEventListener('keydown',e=>{
+    if(S.estop) return;
+    const key = e.key.toLowerCase();
+    if(teclasPresionadas[key]) return; // Evitar repetición de autorepeat
+    
+    teclasPresionadas[key] = true;
+    let dir = null;
+    let estI = 'stop', estD = 'stop';
+    
+    switch(key){
+        case 'w': dir = 'F'; estI = 'fwd'; estD = 'fwd'; break;
+        case 's': dir = 'B'; estI = 'rev'; estD = 'rev'; break;
+        case 'a': dir = 'L'; estI = 'rev'; estD = 'fwd'; break;
+        case 'd': dir = 'R'; estI = 'fwd'; estD = 'rev'; break;
+        case ' ': e.preventDefault(); cmd('estop'); return;
+    }
+    
+    if(dir) {
+        const pwm = S.pwmI; // Usar el PWM seleccionado en los sliders
+        if(ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(`MV:${dir},${pwm}`);
+        }
+        updMotor('i', estI, pwm);
+        updMotor('d', estD, pwm);
+        updFSM('MANUAL');
+        cardLog('control', `Teclado: ${dir} @ ${pwm}`);
+    }
+});
+
+document.addEventListener('keyup', e => {
+    const key = e.key.toLowerCase();
+    if(teclasPresionadas[key]) {
+        delete teclasPresionadas[key];
+        
+        // Si no queda ninguna tecla de movimiento presionada, detener
+        if(!teclasPresionadas['w'] && !teclasPresionadas['s'] && !teclasPresionadas['a'] && !teclasPresionadas['d']) {
+            if(ws && ws.readyState === WebSocket.OPEN) {
+                ws.send('MV:S,0');
+            }
+            updMotor('i', 'stop', 0);
+            updMotor('d', 'stop', 0);
+            updFSM('IDLE');
+            cardLog('control', 'Teclado: STOP');
+        }
+    }
+});
+
+// ── INICIO ──
+window.onload=()=>{
+    log('SYS','HMI v2.1 iniciado')
+    log('SYS','Red: ROBOT-AUTONOMO-S3')
+    
+    canvasTrayectoria = new TrayectoriaCanvas('canvas-trayectoria');
+    
+    // Joystick Inicialización con Feedback Visual Local Instantáneo (Cero Latencia)
+    new VirtualJoystick('joystick-container', 'joystick-knob', (speed, angle) => {
+        document.getElementById('joy-speed').textContent = speed;
+        document.getElementById('joy-angle').textContent = Math.round(angle) + '°';
+
+        if (speed === 0) {
+            if(ws && ws.readyState === WebSocket.OPEN) ws.send('MV:S,0');
+            updMotor('i', 'stop', 0);
+            updMotor('d', 'stop', 0);
+            updFSM('IDLE');
+            cardLog('control', 'Joystick: STOP');
+            return;
+        }
+
+        // Mapear el ángulo a direcciones de motores discretas
+        let dir = 'F';
+        let estI = 'fwd', estD = 'fwd';
+        
+        if (angle > 45 && angle < 135) {
+            dir = 'L'; estI = 'rev'; estD = 'fwd'; // Girar izquierda
+        } else if (angle < -45 && angle > -135) {
+            dir = 'R'; estI = 'fwd'; estD = 'rev'; // Girar derecha
+        } else if (angle > 135 || angle < -135) {
+            dir = 'B'; estI = 'rev'; estD = 'rev'; // Retroceso
+        }
+
+        // Enviar por WebSocket asíncrono
+        if(ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(`MV:${dir},${speed}`);
+        }
+        
+        // Feedback visual local e instantáneo
+        updMotor('i', estI, speed);
+        updMotor('d', estD, speed);
+        updFSM('MANUAL');
+        cardLog('control', `Joystick: ${dir} @ ${speed}`);
+    });
+
+    updFSM('INIT');
+    setTimeout(()=>{updFSM('CALIBRATING');log('SYS','Calibrando IMU...')},1000);
+    setTimeout(()=>{updFSM('IDLE');log('SYS','Sistema listo')},3000);
+    
+    initWS(); // WebSocket
+    
+    // Cargar IP
+    fetch('/network').then(r=>r.text()).then(h=>{
+        const m=h.match(/http:\/\/([^\/<]+)/)
+        if(m) document.getElementById('hdr-ip').textContent=m[1]
+    }).catch(()=>{})
+}
+</script>
+
+</body>
+</html>
+)EOF";
+
+const char* get_html_page() {
+    return HTML_PAGE;
+}

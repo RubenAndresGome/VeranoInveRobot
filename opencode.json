@@ -1,0 +1,40 @@
+{
+  "mcpServers": {
+    "codebase-memory-mcp": {
+      "command": "C:/Users/IK/AppData/Local/Programs/codebase-memory-mcp/codebase-memory-mcp.exe",
+      "args": []
+    }
+  },
+  "skills": [
+    ".opencode/skills/supervisor-metadialectico.md",
+    ".opencode/skills/ockham-razor.md",
+    ".opencode/skills/grafo-dependencias.md",
+    ".opencode/skills/concilio-salamanca/SKILL.md",
+    ".opencode/skills/mde-frontend/SKILL.md"
+  ],
+  "externalSkills": {
+    "MDE_SKILL_MODULOS": "D:/DocumentosWin/MDE Skill Módulos",
+    "description": "Path absoluto local — no portable. Configurar en cada maquina."
+  },
+  "rules": {
+    "always-apply-5s": true,
+    "pre-commit-audit": true,
+    "require-syllogism": true,
+    "require-hilemorfismo-check": true,
+    "ockham-before-new-entity": true
+  },
+  "permissions": {
+    "codebase-memory-mcp": {
+      "index_repository": "allow",
+      "search_graph": "allow",
+      "trace_path": "allow",
+      "query_graph": "allow",
+      "get_code_snippet": "allow",
+      "get_architecture": "allow"
+    },
+    "bash": {
+      "codebase-memory-mcp*": "allow",
+      "pio*": "allow"
+    }
+  }
+}

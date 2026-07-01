@@ -32,6 +32,7 @@ ProyectoDeAutomatizacion/
 .opencode/*
 !.opencode/skills/
 .codebase-memory/
+codebase-memory-mcp/
 
 # ── Archivos comprimidos ──
 *.rar

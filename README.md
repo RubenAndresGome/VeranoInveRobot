@@ -187,6 +187,42 @@ La FSM tiene 7 estados: INIT → CALIBRATING → IDLE → ADVANCING/TURNING/MANU
 Este proyecto esta bajo **Rerum Novarum v1.0** — licencia personalizada basada en GPL 3.0 con:
 - **Diezmo comercial** (1%-10% escalado por ingresos)
 - **Ciclo Septenal** (modificaciones mayores/medias publicas cada 7 anios)
-- **Compliance progresivo** (garantia y soporte al superar umbral de 4 salarios minimos)
+- **Compliance progresivo** (garantia y soporte al superar 4 salarios minimos)
 
 Ver [LICENSE.md](LICENSE.md) para el texto completo.
+
+---
+
+## Metodologia MDE (Model-Driven Engineering)
+
+El proyecto usa un sistema de agentes filosoficos para auditoria y control de calidad:
+
+| Agente | Skill | Funcion |
+|--------|-------|---------|
+| **Supervisor Metadialectico** | `.opencode/skills/supervisor-metadialectico.md` | No-Contradiccion, 5S, Mayeutica, Silogismos |
+| **Ockham Razor** | `.opencode/skills/ockham-razor.md` | Hilemorfismo + Polimorfismo tomista con grafo de conocimiento |
+| **Grafo Dependencias** | `.opencode/skills/grafo-dependencias.md` | Congruencia codigo vs knowledge graph |
+| **Concilio de Salamanca** | `.opencode/skills/concilio-salamanca/` | Tribunal de 39 agentes IA con debate escolastico |
+| **MDE Frontend** | `.opencode/skills/mde-frontend/` | Validacion KPI, componentes UI, paletas de color |
+
+### Herramienta: codebase-memory-mcp
+
+```bash
+# Instalar (una vez)
+curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
+
+# Indexar el proyecto
+codebase-memory-mcp cli index_repository '{"repo_path": "."}'
+```
+
+### Pipeline MDE
+
+```
+Supervisor (no-contradiccion, 5S)
+  → Ockham Razor (hilemorfismo + analogia entis con CBMM)
+    → Concilio de Salamanca (debate multi-agente)
+      → Grafo Dependencias (congruencia)
+        → Build (pio run)
+```
+
+Historial completo de auditorias en `.mde_history/` (16 sesiones PDCA, 66 hallazgos, 39 corregidos).

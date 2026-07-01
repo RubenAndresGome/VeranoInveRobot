@@ -1,0 +1,37 @@
+# Configuración del Concilio de Salamanca (MDE)
+concilio:
+  # Proveedor LLM: openai, deepseek, anthropic, groq, ollama, opencode
+  provider: "openai"
+  # Modelo LLM principal
+  model: "gpt-4o"
+  # URL base opcional (para proxies, self-hosted o DeepSeek)
+  base_url: ""
+  # Temperatura para razonamiento silogistico (0 = determinista)
+  temperature: 0
+  # API key (usa variable de entorno OPENAI_API_KEY si no se especifica)
+  # api_key: "sk-..."
+
+debate:
+  # Número de rondas de refutación cruzada
+  max_rounds: 2
+  # Habilitar validación del Principio de No Contradicción
+  enable_pnc: true
+  # Ejecutar agentes en paralelo (requiere LangGraph con soporte Send)
+  parallel: false
+  # Agentes participantes (claves separadas por comas o nombre de grupo)
+  # Opciones: promotor, defensor, doctor, larouche, leon_xiii,
+  #           linus, wozniak, stallman, stroustrup, thompson, korotkevich
+  # Grupos: escolasticos, pragmaticos, eticos, algoritmicos, acusacion, defensa, todos
+  agents: ["promotor", "defensor", "doctor", "larouche", "leon_xiii"]
+
+output:
+  # Directorio para guardar veredictos
+  save_dir: "./veredictos"
+  # Formato de salida: json, text, markdown
+  format: "json"
+
+licencia:
+  developer_name: ""
+  project_name: ""
+  github_repo: ""
+  default_country: "US"

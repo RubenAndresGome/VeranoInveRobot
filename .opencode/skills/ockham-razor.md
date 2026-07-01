@@ -163,3 +163,150 @@ Respondeo dicendum quod...
 | **Hilemorfismo** | Materia sin forma no es util; forma sin materia no es ejecutable |
 | **Navaja de Ockham** | Ante dos entidades equivalentes, preferir la existente |
 | **No-Relativismo** | La existencia en el grafo es OBJETIVA. Si el grafo dice que existe, existe. |
+
+---
+
+## 7. Metafisica Tomista del Codigo — Ser, Potencia y Acto
+
+Fundamento ontologico para modelar objetos de codigo usando las categorias de Tomas de Aquino:
+
+| Categoria Tomista | Equivalente en Codigo | Verificacion con CBMM |
+|--------------------|----------------------|----------------------|
+| **Esse** (Ser/Existencia) | El objeto existe en el codebase | `search_graph` encuentra el archivo/clase |
+| **Essentia** (Esencia) | La definicion de clase/interfaz (que ES) | `get_code_snippet` muestra su firma |
+| **Substantia** (Sustancia) | Essentia + Esse unidos (instancia concreta) | `trace_path` muestra su call chain |
+| **Accidentia** (Accidentes) | Propiedades mutables (campos, atributos) | `query_graph` busca `DEFINES` edges |
+| **Potentia** (Potencia) | Metodos que PUEDEN ser llamados (firma) | `search_graph` con label `Method` |
+| **Actus** (Acto) | Metodos que SON llamados (call graph) | `trace_path` direction `outbound` |
+| **Unum** (Unidad) | La clase es UNA entidad coherente | Verificar no-contradiccion interna |
+| **Bonum** (Bien) | La clase cumple su proposito sin bugs | Auditoria del Concilio de Salamanca |
+| **Verum** (Verdad) | La implementacion coincide con la interfaz | `grafo-dependencias` skill |
+
+### Silogismo del Ser
+
+```
+PREMISA MAYOR:   Todo ente de codigo tiene esse (existe en archivo),
+                 essentia (definicion de clase) y potentia (metodos posibles)
+
+PREMISA MENOR:   La entidad propuesta {X} [tiene/no tiene] correspondencia
+                 en el grafo bajo estas 3 categorias
+
+CONCLUSION:      Ergo, {X} [es un ente nuevo / es accidente de un ente existente]
+```
+
+---
+
+## 8. Grafo de Analogias — Polimorfismo Ontologico
+
+### Fundamento
+
+Tomas de Aquino establece que el ser se predica analogicamente, no univocamente:
+*"Ens non praedicatur univoce, sed analogice"* (Summa Theologiae I, q.13, a.5)
+
+Aplicado al codigo: **Dos clases que implementan la misma interfaz NO son identicas, pero son ANALOGICAMENTE UNA en relacion a esa interfaz.**
+
+### Tipos de Analogia
+
+| Analogia | Definicion | Patron en Codigo | Deteccion en Grafo |
+|----------|-----------|-----------------|-------------------|
+| **Atribucion** | Un termino se predica de muchos por referencia a uno primero | `BaseClass` → `DerivedA`, `DerivedB` | `INHERITS` edges |
+| **Proporcionalidad Propia** | La relacion A:B es proporcional a C:D | `IMotor`→`motorAvanzar` :: `ISensor`→`leerDato` | Mismo numero de metodos en interfaces diferentes |
+| **Proporcionalidad Impropia (Metafora)** | Analogia debil, solo por nombre | `process()` en `DataProcessor` vs `process()` en `ImageProcessor` | Coincidencia de nombres sin relacion estructural |
+
+### Procedimiento de Verificacion Analogica
+
+```
+Fase A — Detectar Familia Analogica:
+  1. search_graph buscando clases que comparten INHERITS/IMPLEMENTS con la misma interfaz
+  2. query_graph Cypher:
+     MATCH (c1:Class)-[:IMPLEMENTS]->(i:Interface)<-[:IMPLEMENTS]-(c2:Class)
+     WHERE c1.name <> c2.name
+     RETURN i.name AS interfaz, collect(DISTINCT c1.name) + collect(DISTINCT c2.name) AS familia
+
+Fase B — Comparar Potentia (metodos):
+  1. Para cada clase en la familia, get_code_snippet de sus metodos
+  2. Comparar firmas: mismo nombre + mismos parametros = misma potentia
+  3. Calcular indice de analogia:
+     analogia% = (metodos_compartidos / metodos_totales_interfaz) * 100
+
+Fase C — Veredicto Analogico:
+  - analogia% >= 80% → La nueva clase es ANALOGICA a una existente → RECHAZAR (adaptar existente)
+  - analogia% 50-80% → Evaluar si las diferencias son accidentia (propiedades) o essentia (nuevos metodos)
+  - analogia% < 50% → Puede ser ente nuevo → continuar con Fase III (Silogismo de Necesidad)
+```
+
+### Ejemplo de Veredicto Analogico
+
+```
+Quaestio: ¿Debe crearse la clase FastMotor que implemente IMotor?
+
+Videtur quod sic...
+  - FastMotor tiene metodo turboBoost() que MotorStandard no tiene
+  - La velocidad maxima es diferente (accidente de configuracion)
+
+Sed contra...
+  - Grafo de Analogias detecta:
+    MotorStandard IMPLEMENTS IMotor (4 metodos)
+    La nueva FastMotor IMPLEMENTS IMotor (5 metodos: 4 compartidos + 1 nuevo)
+  - Indice de analogia: 4/5 = 80%
+  - turboBoost() es potentia nueva, pero ¿es realmente necesaria?
+  - Los 4 metodos compartidos ya estan en MotorStandard
+  - Santo Tomas diria: la essentia (IMotor) ya tiene ser en MotorStandard
+  
+  DIALOGO OCKHAM-AQUINAS:
+  Ockham:  "¿Por que multiplicar motores? MotorStandard ya existe."
+  Tomas:   "Ambos participan de la misma essentia IMotor. Son analogicamente uno."
+  Ockham:  "Si el unico actus nuevo es turboBoost(), ¿no basta agregarlo como
+            metodo opcional en MotorStandard?"
+  Tomas:   "Correcto. turboBoost seria accidente, no essentia nueva.
+            No se requiere nueva sustancia. Basta potenciar la existente."
+
+Respondeo dicendum quod...
+  RECHAZADO. FastMotor es analogicamente identica a MotorStandard en relacion
+  a IMotor (80% de identidad analogica). El unico metodo nuevo (turboBoost) 
+  puede agregarse como metodo opcional o estrategia de MotorStandard.
+  No hay razon suficiente para crear una nueva sustancia.
+```
+
+---
+
+## 9. Dialogo Ockham-Aquinas (Coloquio Permanente)
+
+Ambos agentes filosoficos deben dialogar antes de cada decision de creacion de entidades:
+
+```
+OCKHAM (Nominalista):
+  "Entia non sunt multiplicanda praeter necessitatem."
+  - ¿Cuantas entidades resuelven YA este problema?
+  - ¿El nuevo nombre es realmente un concepto nuevo o solo un sinonimo?
+  - ¿La complejidad agregada se justifica por una necesidad REAL?
+
+AQUINAS (Realista Moderado):
+  "Bonum est diffusivum sui." (El bien se difunde por si mismo)
+  - ¿La entidad existente es SUFICIENTEMENTE buena?
+  - ¿La nueva entidad participa de la misma essentia (interfaz/tipo base)?
+  - ¿Las diferencias son de essentia o de accidentia?
+  - "Actus purus": ¿que metodos SERAN realmente llamados (trace_path)?
+
+SINTESIS (Magister Determinans):
+  - Si las diferencias son solo accidentia → RECHAZAR (extender existente)
+  - Si hay nueva essentia (interfaz/tipo no existente) + razon suficiente → APROBAR
+  - Si hay nueva potentia pero misma essentia → evaluar costo de adaptar vs crear
+  - "In medio stat virtus": la virtud esta en el termino medio
+```
+
+---
+
+## 10. Principios No-Negociables (Ampliado)
+
+| Principio | Fuente | Aplicacion |
+|-----------|--------|-----------|
+| **No-Contradiccion** | Aristoteles | Si el grafo dice que X existe, no se puede afirmar que X no existe |
+| **Razon Suficiente** | Leibniz | Si no hay razon suficiente, la entidad se RECHAZA por defecto |
+| **Hilemorfismo** | Aristoteles/Tomas | Materia sin forma no es util; forma sin materia no es ejecutable |
+| **Navaja de Ockham** | Ockham | Ante dos entidades equivalentes, preferir la existente |
+| **Analogia Entis** | Tomas de Aquino | Dos clases con misma interfaz son analogicamente una |
+| **Actus et Potentia** | Tomas de Aquino | Distinguir metodos declarados (potentia) de metodos llamados (actus) |
+| **Unum et Bonum** | Tomas de Aquino | Toda entidad debe ser UNA (coherente) y BUENA (cumple proposito) |
+| **No-Relativismo** | Ambos | La existencia en el grafo es OBJETIVA |
+| **No-Relativismo** | La existencia en el grafo es OBJETIVA. Si el grafo dice que existe, existe. |
